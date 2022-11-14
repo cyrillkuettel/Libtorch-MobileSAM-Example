@@ -2,7 +2,7 @@
 
 A minimal example of how ot use OpenCV and Libtorch in the same project.
 
-The project expects Libtorch/ in the top-level direcotry. I have not included this in the repository to keep it light. 
+The project expects libtorch/ in the top-level direcotry. I have not included this in the repository to keep it light. 
 
 ```bash
 wget https://download.pytorch.org/libtorch/nightly/cpu/libtorch-shared-with-deps-latest.zip
