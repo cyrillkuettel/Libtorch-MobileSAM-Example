@@ -41,5 +41,5 @@ int main(){
 		// don't let the execution continue, else imshow() will crash.
 	}
 
-
+	std::cout << "Seems to have worked" << std::endl;
 }
