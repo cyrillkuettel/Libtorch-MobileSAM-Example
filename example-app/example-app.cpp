@@ -8,6 +8,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+
+// https://github.com/AllentDan/LibtorchSegmentation/blob/main/src/Segmentor.h
 int main(){
 
 	std::cout << "The current OpenCV version is " << CV_VERSION << "\n";
@@ -20,10 +22,14 @@ int main(){
 	const int PERSON = 15;
 	const int SHEEP = 17;
 
+	const int inputSize = 224;
+	const float TORCHVISION_NORM_MEAN_RGB[] = {0.485, 0.456, 0.406};
+	const float TORCHVISION_NORM_STD_RGB[] = {0.229, 0.224, 0.225};
+
+
 	torch::jit::script::Module module;
 
 	try {
-		// Deserialize the ScriptModule from a file using torch::jit::load().
 		module = torch::jit::load("/home/cyrill/dev/models/deeplabv3.pt");
 	}
 	catch (const c10::Error& e) {
@@ -42,4 +48,7 @@ int main(){
 	}
 
 	std::cout << "Seems to have worked" << std::endl;
+	cv::Mat resized;
+	cv::resize(resized, resized, cv::Size(inputSize, inputSize));
+	// todo: normalize with mean, std
 }
