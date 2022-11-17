@@ -11,7 +11,9 @@ wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-de
 unzip libtorch-cxx11-abi-shared-with-deps-1.13.0+cpu.zip
 ```
 
-Then, in the example-app, the first time you might have to run these commands:
+Then, in the example-app, the first time you might have to run these commands. 
+ `DCMAKE_PREFIX_PATH` is required to be an absolute path!
+ 
 ```bash
 mkdir build
 cd build
