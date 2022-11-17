@@ -8,7 +8,6 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-
 // https://github.com/AllentDan/LibtorchSegmentation/blob/main/src/Segmentor.h
 int main(){
 
@@ -40,7 +39,7 @@ int main(){
 
 	std::cout << "Successfully loaded\n";
 	cv::Mat jpg;
-	jpg = cv::imread("/home/cyrill/Documents/faces/unsplash.jpg");
+	jpg = cv::imread("/home/cyrill/Pictures/deeplab.jpg");
 	if (jpg.empty())
 	{
 		std::cout << "!!! Failed imread(): image not found" << std::endl;
@@ -49,6 +48,11 @@ int main(){
 
 	std::cout << "Seems to have worked" << std::endl;
 	cv::Mat resized;
-	cv::resize(resized, resized, cv::Size(inputSize, inputSize));
+	try {
+		cv::resize(jpg, resized, cv::Size(inputSize, inputSize));
+	} catch (const std::exception& e) {
+		std::cout << e.what();
+	}
+
 	// todo: normalize with mean, std
 }
