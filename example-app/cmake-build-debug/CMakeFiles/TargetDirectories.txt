@@ -1,0 +1,3 @@
+/home/cyrill/pytorch/example-app/cmake-build-debug/CMakeFiles/example-app.dir
+/home/cyrill/pytorch/example-app/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/cyrill/pytorch/example-app/cmake-build-debug/CMakeFiles/rebuild_cache.dir

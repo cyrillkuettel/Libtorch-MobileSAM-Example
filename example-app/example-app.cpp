@@ -69,7 +69,7 @@ int main()
 
 	std::cout << "Successfully loaded\n";
 	cv::Mat jpg;
-	jpg = cv::imread("/home/cyrill/Pictures/deeplab.jpg");
+	jpg = cv::imread("/home/cyrill/pytorch/example-app/deeplab.jpg");
 	if (jpg.empty()) {
 		std::cout << "!!! Failed imread(): image not found"
 			  << std::endl;

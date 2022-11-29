@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR) 
 project(example-app)
+list(APPEND CMAKE_PREFIX_PATH "/home/cyrill/pytorch/libtorch")
 
 
 find_package(Torch REQUIRED)
