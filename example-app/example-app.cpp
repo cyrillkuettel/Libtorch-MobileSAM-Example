@@ -85,4 +85,6 @@ int main()
 	}
 
 	// todo: normalize with mean, std
+	// https://github.com/pytorch/pytorch/issues/14273
+
 }
