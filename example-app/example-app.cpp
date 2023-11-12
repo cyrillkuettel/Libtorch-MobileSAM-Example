@@ -15,27 +15,23 @@
 #include <torch/torch.h>
 
 const int inputSize = 1024;
-
 const int inputWidth = 1024;
 const int inputHeight = 1024;
 
+const std::vector<float> pixel_mean = { 123.675, 116.28, 103.53 };
+const std::vector<float> pixel_std = { 58.395, 57.12, 57.375 };
+
 torch::Tensor preProcess(cv::Mat &img, int inputWidth, int inputHeight)
 {
-	// img is  8-bit unsigned integer format!
+	// note: img is 8-bit unsigned integer format!
 
-	// Resize the image
 	cv::resize(img, img, cv::Size(inputWidth, inputHeight));
 
-	// Convert to tensor
 	auto inputTensor = torch::from_blob(img.data, { img.rows, img.cols, 3 },
 					    torch::kByte);
 
-	std::cout
-		<< "Created a tensfor from th image (which was resized before)"
-		<< std::endl;
+	// kind of like `set_image` from SAMPredictor
 
-	// like `set_image?  form SAMPredictor(
-	//
 	inputTensor = inputTensor.permute({ 2, 0, 1 }).contiguous();
 	inputTensor = inputTensor.unsqueeze(0);
 
@@ -44,40 +40,26 @@ torch::Tensor preProcess(cv::Mat &img, int inputWidth, int inputHeight)
 		throw std::runtime_error(
 			"set_torch_image input must be BCHW with long side");
 	}
-	std::cout << "assert ok" << std::endl;
 
-	const std::vector<float> pixel_mean = { 123.675, 116.28, 103.53 };
-	const std::vector<float> pixel_std = { 58.395, 57.12, 57.375 };
 	torch::Tensor tensor_pixel_mean = torch::tensor(pixel_mean);
 	torch::Tensor tensor_pixel_std = torch::tensor(pixel_std);
 
 	// Reshape mean and std tensors for broadcasting
 	tensor_pixel_mean = tensor_pixel_mean.view({ 1, 3, 1, 1 });
 	tensor_pixel_std = tensor_pixel_std.view({ 1, 3, 1, 1 });
-
-	std::cout << "create tensors ok" << std::endl;
-
-	// this fails
 	inputTensor = (inputTensor - tensor_pixel_mean) / tensor_pixel_std;
-
-	std::cout << "norm ok" << std::endl;
 
 	// Pad
 	int padh = img.rows - inputWidth;
 	int padw = img.cols - inputHeight;
 	torch::nn::functional::PadFuncOptions padOptions({ 0, padw, 0, padh });
 	inputTensor = torch::nn::functional::pad(inputTensor, padOptions);
-
-	std::cout << "pad ok" << std::endl;
-
 	return inputTensor;
 }
 
 int main()
 {
-	std::cout << "The current OpenCV version is " << CV_VERSION << "\n";
-	torch::Tensor tensor = torch::rand({ 2, 3 });
-	std::cout << tensor << std::endl;
+	std::cout << "OpenCV version is " << CV_VERSION << "\n";
 
 	torch::jit::script::Module predictorModel;
 	torch::jit::script::Module imageEmbeddingModel;
@@ -91,7 +73,6 @@ int main()
 	try {
 		predictorModel = torch::jit::load(mobilesam_predictor);
 		imageEmbeddingModel = torch::jit::load(vit_image_embedding);
-
 	} catch (const c10::Error &e) {
 		std::cerr << e.what() << "error loading the model\n";
 		return -1;
@@ -101,8 +82,7 @@ int main()
 	jpg = cv::imread("/home/cyrill/Downloads/img.jpg");
 
 	if (jpg.empty()) {
-		std::cout << "!!! Failed imread(): image not found"
-			  << std::endl;
+		std::cout << "imread(): failed: Image not found" << std::endl;
 		return -1;
 	}
 
@@ -110,8 +90,8 @@ int main()
 	cv::cvtColor(jpg, img_converted, cv::COLOR_BGR2RGB);
 
 	cv::Mat img = img_converted;
-    int originalImageHeight = img.rows;
-    int originalImageWidth = img.cols;
+	int originalImageHeight = img.rows;
+	int originalImageWidth = img.cols;
 
 	std::cout << "convertTo" << std::endl;
 	// The line img_converted.convertTo(img, CV_8UC3); seems redundant in this context because the image, once loaded and potentially color-converted, is already in the CV_8UC3 format.
@@ -139,42 +119,38 @@ int main()
 	// image embeddings:
 	auto features = imageEmbeddingModel.forward(inputs).toTensor();
 
-	// now we hvae features. So now we are at a state where we have called
+	// now we hvae features. So now basically we are at a state that is similar to the python state of where we have called
 	// predictor = SAMPredictor()
 	// predictor.set_image()
 
 	std::cout << ".forward called on imageEmbeddingModel" << std::endl;
 	std::cout << "we have features" << std::endl;
 
-	// what we do now tries to be equivalent to the following python from the
-	// example:
+	// now (equivalent python) this:
 	// masks, scores, logits = predictor.predict(
 	//point_coords=input_point,
 	//point_labels=input_label,
 	//kmultimask_output=True,
 	//)
 
-	// Prepare additional inputs for the predictor model
-    // pointCoords might actually be a list of lists therfore {20, 20} is not
-    // correct.
-    //
-	std::vector<int64_t> pointCoords = { 20, 20 }; // random point for now
-	std::vector<int64_t> pointLabels = { 1 }; // Example label
+	// todo: replace with actual touched point when we have that.
+	std::vector<float> pointCoords = {
+		20.0f, 20.0f, 20.0f, 20.0f, 20.0f,
+		20.0f, 20.0f, 20.0f, 20.0f, 20.0f
+	}; // Random points as floats
+	std::vector<float> pointLabels = { 1.0f, 1.0f, 1.0f, 1.0f,
+					   1.0f }; // Example labels as floats
 
 	auto pointCoordsTensor =
-		torch::tensor(pointCoords, torch::dtype(torch::kInt64));
+		torch::tensor(pointCoords, torch::dtype(torch::kFloat32));
 	auto pointLabelsTensor =
-		torch::tensor(pointLabels, torch::dtype(torch::kInt64));
+		torch::tensor(pointLabels, torch::dtype(torch::kFloat32));
 
 	pointCoordsTensor =
-		pointCoordsTensor.reshape({ 1, 1, 2 }).to(torch::kFloat32);
+		pointCoordsTensor.reshape({ 1, 5, 2 }).to(torch::kFloat32);
 	pointLabelsTensor =
-		pointLabelsTensor.reshape({ 1, 1 }).to(torch::kInt32);
+		pointLabelsTensor.reshape({ 1, 5 }).to(torch::kFloat32);
 
-    // see here: "What is the best way to pass in a tensor that could optionally
-    // be None to a function?" 
-    // https://discuss.pytorch.org/t/what-is-the-best-way-to-pass-in-a-tensor-that-could-optionally-be-none-to-a-function/88283
-    
 	/**
      * predictorModel.forward(
         Tensor image_embeddings, 
@@ -185,33 +161,39 @@ int main()
         Tensor orig_im_size)
     */
 
-    // not sure what this should be? maskInput is not used for now
-    // maybe it wants float?
-    auto maskInput = torch::zeros({1, 1, originalImageHeight, originalImageWidth}, torch::dtype(torch::kFloat32));
+	// int mask_input_size = [4 * x for x in embed_size] == [256, 256]
 
-    // auto hasMaskInput = torch::tensor({0}, torch::dtype(torch::kInt32)); 
-    //
-auto hasMaskInput = torch::tensor({0}, torch::dtype(torch::kInt32)).reshape({1, 1, 1, 1});  // Reshaping to 4D tensor
-    auto origImgSize = torch::tensor({originalImageHeight, originalImageWidth}, torch::dtype(torch::kInt64));
-                                                                         
+	auto maskInput =
+		torch::zeros({ 1, 1, 256, 256 }, torch::dtype(torch::kFloat32));
 
-    std::vector<torch::jit::IValue> inputs2;
-    inputs2.push_back(features); // image_embeddings
-    inputs2.push_back(pointCoordsTensor); 
-    inputs2.push_back(pointLabelsTensor);
-    inputs2.push_back(maskInput); 
-    inputs2.push_back(hasMaskInput);
-    inputs2.push_back(origImgSize);
+	// origImgSize might have to be [1500, 2250] I'm not sure at this point
+	auto origImgSize =
+		torch::tensor({ originalImageHeight, originalImageWidth },
+			      torch::dtype(torch::kFloat32));
 
+	auto hasMaskInput = torch::tensor({ 0 }, torch::dtype(torch::kFloat32));
+	std::vector<torch::jit::IValue> inputs2;
+	inputs2.push_back(features); // image_embeddings
+	inputs2.push_back(pointCoordsTensor);
+	inputs2.push_back(pointLabelsTensor);
+	inputs2.push_back(maskInput);
+	inputs2.push_back(hasMaskInput);
+	inputs2.push_back(origImgSize);
 
-	auto outputDict = predictorModel.forward(inputs2).toGenericDict();
-
+	auto modeloutput = predictorModel.forward(inputs2);
+	std::cout << "predictorModel.forward(inputs2); ok " << std::endl;
 	// Accessing output tensors
-    //
-	auto masks = outputDict.at("masks").toTensor();
-	auto iou_predictions = outputDict.at("iou_predictions").toTensor();
-	auto low_res_masks = outputDict.at("low_res_logits").toTensor();
+
+	auto outputs = modeloutput.toTuple()->elements();
+
+	for (size_t i = 0; i < outputs.size(); ++i) {
+		auto tensor = outputs[i].toTensor();
+		std::cout << "Output " << i << ": Size = " << tensor.sizes()
+			  << ", Type = " << tensor.scalar_type() << std::endl;
+	}
+	torch::Tensor masks = outputs[0].toTensor();
+	torch::Tensor iou_predictions = outputs[1].toTensor();
+	torch::Tensor low_res_masks = outputs[2].toTensor();
 
 	// Process the output as needed
-	// ...
 }
