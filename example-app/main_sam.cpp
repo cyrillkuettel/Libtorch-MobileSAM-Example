@@ -70,8 +70,8 @@ class SamPredictor {
 		torch::Tensor hasMaskInput = torch::tensor(
 			{ maskInput.defined() ? 1 : 0 }, torch::kFloat);
 		torch::Tensor origImSize = torch::tensor(
-			{ 453, 680}, // original Image size
-                        
+			{ 453, 680 }, // original Image size
+
 			torch::kFloat); // Update with actual image size
 
 		std::vector<torch::jit::IValue> inputs = {
@@ -125,8 +125,8 @@ int main()
 	predictor.set_image(jpg);
 
 	// Prepare prediction inputs
-    // create hardcoded input points for now. 
-    
+	// create hardcoded input points for now.
+
 	torch::Tensor pointCoords = torch::tensor({ 400, 400 }, torch::kInt64)
 
 					    .to(torch::kFloat32)
@@ -136,9 +136,9 @@ int main()
 	// should be [masks, iouPredictions, lowResMasks]
 
 	auto predictionResult = predictor.predict(pointCoords, pointLabels);
-    auto masks = std::get<0>(predictionResult);
-    auto iouPredictions = std::get<1>(predictionResult);
-    auto lowResMasks = std::get<2>(predictionResult);
+	auto masks = std::get<0>(predictionResult);
+	auto iouPredictions = std::get<1>(predictionResult);
+	auto lowResMasks = std::get<2>(predictionResult);
 
 	// Process the outputs (e.g., display or save the masks)
 	// ...
