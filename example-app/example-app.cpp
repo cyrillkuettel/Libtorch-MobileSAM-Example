@@ -114,21 +114,33 @@ cv::Mat tensorToMat(torch::Tensor tensor) {
 
 
 void showMask(const torch::Tensor& mask, cv::Mat& image) {
+	if (mask.numel() == 0) {
+		throw std::runtime_error("Empty mask tensor.");
+	}
 
-   
-    if (mask.numel() == 0) {
-        throw std::runtime_error("Empty mask tensor.");
-    }
+	cv::Scalar color = cv::Scalar(30, 144, 255); // BGR color
+	double alpha = 0.6; // Transparency factor
 
-    cv::Scalar color = cv::Scalar(30, 144, 255, 0.6 * 255);
-    cv::Mat maskMat = tensorToMat(mask);
-    cv::Mat coloredMask;
-    cv::cvtColor(maskMat, coloredMask, cv::COLOR_GRAY2BGR);
-    coloredMask *= color;
+	cv::Mat maskMat = tensorToMat(mask);
+	cv::Mat coloredMask;
+	cv::cvtColor(maskMat, coloredMask, cv::COLOR_GRAY2BGR);
 
-    // Overlay the colored mask on the image
-    cv::addWeighted(image, 1.0, coloredMask, 0.6, 0.0, image);
+	// Splitting the colored mask into three channels
+	std::vector<cv::Mat> channels(3);
+	cv::split(coloredMask, channels);
+
+	// Multiply each channel by the corresponding color value
+	channels[0] *= color[0];
+	channels[1] *= color[1];
+	channels[2] *= color[2];
+
+	// Merge the channels back
+	cv::merge(channels, coloredMask);
+
+	// Overlay the colored mask on the image
+	cv::addWeighted(image, 1.0 - alpha, coloredMask, alpha, 0.0, image);
 }
+
 
 // Function to show points
 void showPoints(const torch::Tensor &coords, const torch::Tensor &labels,
@@ -366,7 +378,7 @@ int main(int argc, char *argv[])
 	}
 
 	cv::Mat img_converted;
-	cv::cvtColor(jpg, img_converted, cv::COLOR_BGR2RGB);
+	cv::cvtColor(jpg.clone(), img_converted, cv::COLOR_BGR2RGB);
 
 	cv::Mat img = img_converted;
 	int originalImageHeight = img.rows;
@@ -391,7 +403,7 @@ int main(int argc, char *argv[])
 
     std::cout << masks.sizes() << std::endl;
 
-    visualizeResults(img, masks, iou_predictions, pointCoordsTensor, pointLabelsTensor);
+    visualizeResults(jpg, masks, iou_predictions, pointCoordsTensor, pointLabelsTensor);
 
     return 0;
 }
