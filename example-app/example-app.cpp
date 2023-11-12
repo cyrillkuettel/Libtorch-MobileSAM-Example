@@ -122,50 +122,60 @@ int main()
 
 
 	cv::Mat img = img_converted;
-	// Converts the image to uint8 with 3 channels (HxWxC)
-    //
+
 	std::cout << "convertTo" << std::endl;
+    // The line img_converted.convertTo(img, CV_8UC3); seems redundant in this context because the image, once loaded and potentially color-converted, is already in the CV_8UC3 format.
+    //
 	img_converted.convertTo(img, CV_8UC3);
 
     // resize accoring to how they do it
     // not rocket science 
-    //
-	std::cout << "starting preProcess now" << std::endl;
     torch::Tensor inputTensor = preProcess(img, inputWidth, inputHeight);
 
     // up until here, this was the `SamPredictor.set_image` function which does
     // all the pre-processing
    
 	std::cout << "preProcess ok" << std::endl;
-    return 0;
 		
-	
 	// https://github.com/cmarschner/MobileSAM/blob/a509aac54fdd7af59f843135f2f7cee307283c88/mobile_sam/predictor.py#L79
 	//
    
-
-    // also we need to preProcess
-    
-	std::cout << "from_blob ok" << std::endl;
-
 	// Run image through the embedding model
+	// Here we differ from the orignial python example because we have two
+    // models for pytroch lite interpreter 
 	std::vector<torch::jit::IValue> inputs;
 	inputs.push_back(inputTensor);
-
+    
+    // image embeddings:
 	auto features = imageEmbeddingModel.forward(inputs).toTensor();
 
-	std::cout << ".forward called on imageEmbeddingModel" << std::endl;
+    // now we hvae features. So now we are at a state where we have called
+    // predictor = SAMPredictor()
+    // predictor.set_image()
 
-	return 0;
+
+	std::cout << ".forward called on imageEmbeddingModel" << std::endl;
+	std::cout << "we have features" << std::endl;
+
+    // what we do now tries to be equivalent to the following python from the
+    // example: 
+    // masks, scores, logits = predictor.predict(
+    //point_coords=input_point,
+    //point_labels=input_label,
+    //kmultimask_output=True,
+//)
+
 
 	// Prepare additional inputs for the predictor model
 	std::vector<int64_t> pointCoords = { 20, 20 }; // random point for now
 	std::vector<int64_t> pointLabels = { 1 }; // Example label
-		//
+                                              
+	
 	auto pointCoordsTensor =
 		torch::tensor(pointCoords, torch::dtype(torch::kInt64));
 	auto pointLabelsTensor =
 		torch::tensor(pointLabels, torch::dtype(torch::kInt64));
+
 	pointCoordsTensor =
 		pointCoordsTensor.reshape({ 1, 1, 2 }).to(torch::kFloat32);
 	pointLabelsTensor =
