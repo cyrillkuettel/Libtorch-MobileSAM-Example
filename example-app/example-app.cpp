@@ -4,6 +4,10 @@
 #include <cassert>
 #include <stdexcept>
 #include <algorithm>
+#include <vector>
+#include <iterator>
+#include <string>
+#include <sstream>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -21,6 +25,13 @@ const int inputHeight = 1024;
 const std::vector<float> pixel_mean = { 123.675, 116.28, 103.53 };
 const std::vector<float> pixel_std = { 58.395, 57.12, 57.375 };
 
+// usage: ./example-app img.jpg mobilesam_preditor.pt vit_image_embedding.pt
+
+struct ImageParams {
+	std::string image;
+	std::string mobilesamPredictor;
+	std::string vitImageEmbedding;
+};
 torch::Tensor preProcess(cv::Mat &img, int inputWidth, int inputHeight)
 {
 	// note: img is 8-bit unsigned integer format!
@@ -57,18 +68,50 @@ torch::Tensor preProcess(cv::Mat &img, int inputWidth, int inputHeight)
 	return inputTensor;
 }
 
-int main()
+ImageParams parseParams(int argc, char *argv[])
 {
+	ImageParams params;
+
+	std::string defaultImagePath =
+		"/home/cyrill/ba/MobileSAM/notebooks/images/picture1.jpg";
+	std::string defaultMobileSamPredictor =
+		"/home/cyrill/Documents/models/mobilesam_predictor.pt";
+	std::string defaultVitImageEmbedding =
+		"/home/cyrill/Documents/models/vit_image_embedding.pt";
+
+	// Set image path
+	params.image = (argc > 1) ? argv[1] : defaultImagePath;
+
+	// Set mobilesam_predictor and vit_image_embedding paths
+	params.mobilesamPredictor = (argc > 2) ? argv[2] :
+						 defaultMobileSamPredictor;
+	params.vitImageEmbedding = (argc > 3) ? argv[3] :
+						defaultVitImageEmbedding;
+
+	return params;
+}
+
+int main(int argc, char *argv[])
+{
+	ImageParams params;
+	try {
+		params = parseParams(argc, argv);
+	} catch (const std::runtime_error &e) {
+		std::cerr << e.what() << "\n";
+		return -1;
+	}
+
 	std::cout << "OpenCV version is " << CV_VERSION << "\n";
 
 	torch::jit::script::Module predictorModel;
 	torch::jit::script::Module imageEmbeddingModel;
 
-	std::string mobilesam_predictor =
-		"/home/cyrill/Documents/models/mobilesam_predictor.pt";
-
-	std::string vit_image_embedding =
-		"/home/cyrill/Documents/models/vit_image_embedding.pt";
+	std::string mobilesam_predictor = params.mobilesamPredictor;
+	std::string vit_image_embedding = params.vitImageEmbedding;
+	std::cout << "MobileSAM Predictor Path: " << params.mobilesamPredictor
+		  << "\n";
+	std::cout << "ViT Image Embedding Path: " << params.vitImageEmbedding
+		  << "\n";
 
 	try {
 		predictorModel = torch::jit::load(mobilesam_predictor);
@@ -78,8 +121,7 @@ int main()
 		return -1;
 	}
 
-	cv::Mat jpg;
-	jpg = cv::imread("/home/cyrill/Downloads/img.jpg");
+	cv::Mat jpg = cv::imread(params.image, cv::IMREAD_COLOR);
 
 	if (jpg.empty()) {
 		std::cout << "imread(): failed: Image not found" << std::endl;
@@ -94,17 +136,14 @@ int main()
 	int originalImageWidth = img.cols;
 
 	std::cout << "convertTo" << std::endl;
-	// The line img_converted.convertTo(img, CV_8UC3); seems redundant in this context because the image, once loaded and potentially color-converted, is already in the CV_8UC3 format.
+	// img_converted.convertTo(img, CV_8UC3) seems redundant in this context because the image, once loaded and potentially color-converted, is already in the CV_8UC3 format. But it pays to be paranoid...
 	//
 	img_converted.convertTo(img, CV_8UC3);
 
-	// resize accoring to how they do it
-	// not rocket science
 	torch::Tensor inputTensor = preProcess(img, inputWidth, inputHeight);
 
 	// up until here, this was the `SamPredictor.set_image` function which does
 	// all the pre-processing
-
 	std::cout << "preProcess ok" << std::endl;
 
 	// https://github.com/cmarschner/MobileSAM/blob/a509aac54fdd7af59f843135f2f7cee307283c88/mobile_sam/predictor.py#L79
@@ -186,14 +225,29 @@ int main()
 
 	auto outputs = modeloutput.toTuple()->elements();
 
+	std::cout << "output tensors informations:" << std::endl;
+
 	for (size_t i = 0; i < outputs.size(); ++i) {
 		auto tensor = outputs[i].toTensor();
-		std::cout << "Output " << i << ": Size = " << tensor.sizes()
+		std::string variable_name;
+		switch (i) {
+		case 0:
+			variable_name = "masks";
+			break;
+		case 1:
+			variable_name = "iou_predictions";
+			break;
+		case 2:
+			variable_name = "low_res_masks";
+			break;
+		default:
+			variable_name = "Output " + std::to_string(i);
+		}
+		std::cout << variable_name << ": Size = " << tensor.sizes()
 			  << ", Type = " << tensor.scalar_type() << std::endl;
 	}
 	torch::Tensor masks = outputs[0].toTensor();
 	torch::Tensor iou_predictions = outputs[1].toTensor();
 	torch::Tensor low_res_masks = outputs[2].toTensor();
-
 	// Process the output as needed
 }

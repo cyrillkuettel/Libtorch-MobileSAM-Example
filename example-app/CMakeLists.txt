@@ -6,6 +6,10 @@ list(APPEND CMAKE_PREFIX_PATH "/home/cyrill/pytorch/libtorch")
 find_package(Torch REQUIRED)
 FIND_PACKAGE( OpenCV REQUIRED COMPONENTS core imgproc highgui)                              
 INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
+
+# Set optimization flags for release mode
+# set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
 SET(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
 
 
