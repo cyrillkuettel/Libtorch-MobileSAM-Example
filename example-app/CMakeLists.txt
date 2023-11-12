@@ -1,10 +1,8 @@
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR) 
 project(example-app)
-list(APPEND CMAKE_PREFIX_PATH "/home/cyrill/pytorch/libtorch")
-
 
 find_package(Torch REQUIRED)
-FIND_PACKAGE( OpenCV REQUIRED COMPONENTS core imgproc highgui)                              
+FIND_PACKAGE( OpenCV REQUIRED COMPONENTS core imgproc highgui)
 INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
 
 # Set optimization flags for release mode

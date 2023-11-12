@@ -306,6 +306,8 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor> runInference(
 int main(int argc, char *argv[])
 
 {
+    std::cout << "The current OpenCV version is " << CV_VERSION << "\n";
+    std::cout << "LibTorch version: " << TORCH_VERSION << std::endl;
 
     // prepare pointCoords and pointLabels
 	// todo: this is a bit goofy, replace with actual points  
