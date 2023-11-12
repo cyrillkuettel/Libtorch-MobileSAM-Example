@@ -8,7 +8,6 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 
-
 void test()
 {
 	const unsigned char colors[37][3] = {
@@ -27,7 +26,7 @@ void test()
 		{ 0, 120, 87 }
 	};
 
-	const unsigned char* color = colors[10];
+	const unsigned char *color = colors[10];
 	const unsigned char mycolor1 = color[0];
 	const unsigned char mycolor2 = color[1];
 
@@ -39,8 +38,6 @@ void test()
 // https://docs.opencv.org/4.3.0/d4/d88/samples_2dnn_2segmentation_8cpp-example.html#a19
 int main()
 {
-
-
 	std::cout << "The current OpenCV version is " << CV_VERSION << "\n";
 	torch::Tensor tensor = torch::rand({ 2, 3 });
 	std::cout << tensor << std::endl;

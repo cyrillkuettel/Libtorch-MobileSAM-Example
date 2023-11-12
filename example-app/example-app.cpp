@@ -11,14 +11,13 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 
+const int inputSize = 1024;
 
-	const int inputSize = 1024;
+const int inputWidth = 1024;
+const int inputHeight = 1024;
 
-	const int inputWidth = 1024;
-	const int inputHeight = 1024;
-
-	const std::vector<float> pixel_mean = { 123.675, 116.28, 103.53 };
-	const std::vector<float> pixel_std = { 58.395, 57.12, 57.375 };
+const std::vector<float> pixel_mean = { 123.675, 116.28, 103.53 };
+const std::vector<float> pixel_std = { 58.395, 57.12, 57.375 };
 
 torch::Tensor preprocess(const torch::Tensor &input, int targetSize)
 {
@@ -45,7 +44,6 @@ int main()
 	torch::Tensor tensor = torch::rand({ 2, 3 });
 	std::cout << tensor << std::endl;
 
-
 	torch::jit::script::Module predictorModel;
 	torch::jit::script::Module imageEmbeddingModel;
 
@@ -71,39 +69,39 @@ int main()
 	if (jpg.empty()) {
 		std::cout << "!!! Failed imread(): image not found"
 			  << std::endl;
-        return -1;
-	
+		return -1;
 	}
 
-    cv::Mat img_converted;
-    cv::cvtColor(jpg, img_converted, cv::COLOR_BGR2RGB);
+	cv::Mat img_converted;
+	cv::cvtColor(jpg, img_converted, cv::COLOR_BGR2RGB);
 
-    cv::Mat img;
-    img.convertTo(img, CV_8UC3); // Converts the image to uint8 with 3 channels (HxWxC)
-    
-    cv::resize(img, img, cv::Size(inputWidth, inputHeight));
-    
+	cv::Mat img;
+	img.convertTo(
+		img,
+		CV_8UC3); // Converts the image to uint8 with 3 channels (HxWxC)
+
+	cv::resize(img, img, cv::Size(inputWidth, inputHeight));
 
 	// like `set_image` of `SamPredictor`
-	auto inputTensor = torch::from_blob(img.data, { 1, 3, inputWidth, inputHeight }, torch::kFloat);
-    inputTensor = inputTensor.permute({2, 0, 1}).contiguous(); // Change layout from HWC to CHW
-    inputTensor = inputTensor.unsqueeze(0); // Add batch dimension
+	auto inputTensor = torch::from_blob(
+		img.data, { 1, 3, inputWidth, inputHeight }, torch::kFloat);
+	inputTensor = inputTensor.permute({ 2, 0, 1 })
+			      .contiguous(); // Change layout from HWC to CHW
+	inputTensor = inputTensor.unsqueeze(0); // Add batch dimension
 	std::cout << "from_blob ok" << std::endl;
 
-
 	// Run image through the embedding model
-    std::vector<torch::jit::IValue> inputs;
-    inputs.push_back(inputTensor);
+	std::vector<torch::jit::IValue> inputs;
+	inputs.push_back(inputTensor);
 
 	auto features = imageEmbeddingModel.forward(inputs).toTensor();
 
 	std::cout << ".forward called" << std::endl;
 
-
 	// Prepare additional inputs for the predictor model
 	std::vector<int64_t> pointCoords = { 200, 200 }; // random point for now
 	std::vector<int64_t> pointLabels = { 1 }; // Example label
-                                              //
+		//
 	auto pointCoordsTensor =
 		torch::tensor(pointCoords, torch::dtype(torch::kInt64));
 	auto pointLabelsTensor =
@@ -126,5 +124,3 @@ int main()
 	// Process the output as needed
 	// ...
 }
-
-
