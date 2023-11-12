@@ -71,37 +71,39 @@ int main()
 	if (jpg.empty()) {
 		std::cout << "!!! Failed imread(): image not found"
 			  << std::endl;
-		// don't let the execution continue, else imshow() will crash.
+        return -1;
+	
 	}
 
-	std::cout << "Seems to have worked" << std::endl;
+    cv::Mat img_converted;
+    cv::cvtColor(jpg, img_converted, cv::COLOR_BGR2RGB);
 
-	cv::Mat resized;
-	try {
-		cv::resize(jpg, resized, cv::Size(inputSize, inputSize));
-	} catch (const std::exception &e) {
-		std::cout << "resize failed" << std::endl;
-		std::cout << e.what();
-	}
+    cv::Mat img;
+    img.convertTo(img, CV_8UC3); // Converts the image to uint8 with 3 channels (HxWxC)
+    
+    cv::resize(img, img, cv::Size(inputWidth, inputHeight));
+    
 
-	// Prepare input image
-	auto inputTensor = torch::from_blob(
-		resized, { 1, 3, inputWidth, inputHeight }, torch::kFloat);
+	// like `set_image` of `SamPredictor`
+	auto inputTensor = torch::from_blob(img.data, { 1, 3, inputWidth, inputHeight }, torch::kFloat);
+    inputTensor = inputTensor.permute({2, 0, 1}).contiguous(); // Change layout from HWC to CHW
+    inputTensor = inputTensor.unsqueeze(0); // Add batch dimension
+	std::cout << "from_blob ok" << std::endl;
 
-	int imgSize = std::max(
-		inputWidth, inputHeight); // Assuming square padding is needed
-	auto preprocessedInput = preprocess(inputTensor, imgSize);
 
 	// Run image through the embedding model
     std::vector<torch::jit::IValue> inputs;
-    inputs.push_back(preprocessedInput);
+    inputs.push_back(inputTensor);
 
 	auto features = imageEmbeddingModel.forward(inputs).toTensor();
-    return 0;
+
+	std::cout << ".forward called" << std::endl;
+
 
 	// Prepare additional inputs for the predictor model
-	std::vector<int64_t> pointCoords = { 200, 200 };
+	std::vector<int64_t> pointCoords = { 200, 200 }; // random point for now
 	std::vector<int64_t> pointLabels = { 1 }; // Example label
+                                              //
 	auto pointCoordsTensor =
 		torch::tensor(pointCoords, torch::dtype(torch::kInt64));
 	auto pointLabelsTensor =
