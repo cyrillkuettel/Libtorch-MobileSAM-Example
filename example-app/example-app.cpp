@@ -1,60 +1,53 @@
 #include <iostream>
 #include <memory>
+#include <vector>
+
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgcodecs/imgcodecs.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>
+
 #include <torch/script.h>
 #include <torch/torch.h>
 
-void test()
+
+	const int inputSize = 1024;
+
+	const int inputWidth = 1024;
+	const int inputHeight = 1024;
+
+	const std::vector<float> pixel_mean = { 123.675, 116.28, 103.53 };
+	const std::vector<float> pixel_std = { 58.395, 57.12, 57.375 };
+
+torch::Tensor preprocess(const torch::Tensor &input, int targetSize)
 {
-	const unsigned char colors[37][3] = {
-		{ 54, 67, 244 },   { 99, 30, 233 },   { 176, 39, 156 },
-		{ 183, 58, 103 },  { 181, 81, 63 },   { 243, 150, 33 },
-		{ 244, 169, 3 },   { 212, 188, 0 },   { 136, 150, 0 },
-		{ 80, 175, 76 },   { 74, 195, 139 },  { 57, 220, 205 },
-		{ 59, 235, 255 },  { 7, 193, 255 },   { 0, 152, 255 },
-		{ 34, 87, 255 },   { 72, 85, 121 },   { 158, 158, 158 },
-		{ 139, 125, 96 },  { 124, 32, 36 },   { 40, 200, 40 },
-		{ 32, 32, 200 },   { 231, 129, 255 }, { 32, 10, 34 },
-		{ 124, 34, 120 },  { 120, 32, 200 },  { 31, 129, 255 },
-		{ 132, 10, 34 },   { 124, 100, 220 }, { 155, 255, 180 },
-		{ 217, 220, 105 }, { 19, 35, 155 },   { 100, 193, 255 },
-		{ 0, 152, 55 },	   { 25, 125, 25 },   { 122, 122, 255 },
-		{ 0, 120, 87 }
-	};
+	// Normalize colors
+	auto meanTensor = torch::tensor(pixel_mean).view({ -1, 1, 1 });
+	auto stdTensor = torch::tensor(pixel_std).view({ -1, 1, 1 });
+	auto normalizedInput = (input - meanTensor) / stdTensor;
 
-	const unsigned char *color = colors[10];
-	const unsigned char mycolor1 = color[0];
-	const unsigned char mycolor2 = color[1];
+	// Pad to square
+	int h = input.size(1);
+	int w = input.size(2);
+	int padh = targetSize - h;
+	int padw = targetSize - w;
+	auto paddedInput = torch::nn::functional::pad(
+		normalizedInput,
+		torch::nn::functional::PadFuncOptions({ 0, padw, 0, padh }));
 
-	std::cout << static_cast<unsigned>(mycolor1) << std::endl;
-	std::cout << static_cast<unsigned>(mycolor2) << std::endl;
+	return paddedInput;
 }
 
-// https://github.com/AllentDan/LibtorchSegmentation/blob/main/src/Segmentor.h
-// https://docs.opencv.org/4.3.0/d4/d88/samples_2dnn_2segmentation_8cpp-example.html#a19
 int main()
 {
 	std::cout << "The current OpenCV version is " << CV_VERSION << "\n";
 	torch::Tensor tensor = torch::rand({ 2, 3 });
 	std::cout << tensor << std::endl;
 
-	// see
-	// http://host.robots.ox.ac.uk:8080/pascal/VOC/voc2007/segexamples/index.html
-	// for the list of classes with indexes
-	const int CLASSNUM = 21;
-	const int DOG = 12;
-	const int PERSON = 15;
-	const int SHEEP = 17;
 
-	const int inputSize = 224;
-	const float TORCHVISION_NORM_MEAN_RGB[] = { 0.485, 0.456, 0.406 };
-	const float TORCHVISION_NORM_STD_RGB[] = { 0.229, 0.224, 0.225 };
-
-	torch::jit::script::Module module;
+	torch::jit::script::Module predictorModel;
+	torch::jit::script::Module imageEmbeddingModel;
 
 	std::string mobilesam_predictor =
 		"/home/cyrill/Documents/models/mobilesam_predictor.pt";
@@ -63,9 +56,11 @@ int main()
 		"/home/cyrill/Documents/models/vit_image_embedding.pt";
 
 	try {
-		module = torch::jit::load(mobilesam_predictor);
+		predictorModel = torch::jit::load(mobilesam_predictor);
+		imageEmbeddingModel = torch::jit::load(vit_image_embedding);
+
 	} catch (const c10::Error &e) {
-		std::cerr << e.what() <<  "error loading the model\n";
+		std::cerr << e.what() << "error loading the model\n";
 		return -1;
 	}
 
@@ -81,17 +76,53 @@ int main()
 
 	std::cout << "Seems to have worked" << std::endl;
 
-	// just check if this (I hope it does)
-	//
-	return 0;
-
 	cv::Mat resized;
 	try {
 		cv::resize(jpg, resized, cv::Size(inputSize, inputSize));
 	} catch (const std::exception &e) {
+		std::cout << "resize failed" << std::endl;
 		std::cout << e.what();
 	}
 
-	// todo: normalize with mean, std
-	// https://github.com/pytorch/pytorch/issues/14273
+	// Prepare input image
+	auto inputTensor = torch::from_blob(
+		resized, { 1, 3, inputWidth, inputHeight }, torch::kFloat);
+
+	int imgSize = std::max(
+		inputWidth, inputHeight); // Assuming square padding is needed
+	auto preprocessedInput = preprocess(inputTensor, imgSize);
+
+	// Run image through the embedding model
+    std::vector<torch::jit::IValue> inputs;
+    inputs.push_back(preprocessedInput);
+
+	auto features = imageEmbeddingModel.forward(inputs).toTensor();
+    return 0;
+
+	// Prepare additional inputs for the predictor model
+	std::vector<int64_t> pointCoords = { 200, 200 };
+	std::vector<int64_t> pointLabels = { 1 }; // Example label
+	auto pointCoordsTensor =
+		torch::tensor(pointCoords, torch::dtype(torch::kInt64));
+	auto pointLabelsTensor =
+		torch::tensor(pointLabels, torch::dtype(torch::kInt64));
+	pointCoordsTensor =
+		pointCoordsTensor.reshape({ 1, 1, 2 }).to(torch::kFloat32);
+	pointLabelsTensor =
+		pointLabelsTensor.reshape({ 1, 1 }).to(torch::kInt32);
+
+	// Run the prediction model
+	inputs = { features, pointCoordsTensor,
+		   pointLabelsTensor }; // Add more inputs as needed
+	auto outputDict = predictorModel.forward(inputs).toGenericDict();
+
+	// Accessing output tensors
+	auto masks = outputDict.at("masks").toTensor();
+	auto iou_predictions = outputDict.at("iou_predictions").toTensor();
+	auto low_res_masks = outputDict.at("low_res_logits").toTensor();
+
+	// Process the output as needed
+	// ...
 }
+
+
