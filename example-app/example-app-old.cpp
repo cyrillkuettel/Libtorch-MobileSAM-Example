@@ -8,6 +8,7 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 
+
 void test()
 {
 	const unsigned char colors[37][3] = {
@@ -26,7 +27,7 @@ void test()
 		{ 0, 120, 87 }
 	};
 
-	const unsigned char *color = colors[10];
+	const unsigned char* color = colors[10];
 	const unsigned char mycolor1 = color[0];
 	const unsigned char mycolor2 = color[1];
 
@@ -38,6 +39,8 @@ void test()
 // https://docs.opencv.org/4.3.0/d4/d88/samples_2dnn_2segmentation_8cpp-example.html#a19
 int main()
 {
+
+
 	std::cout << "The current OpenCV version is " << CV_VERSION << "\n";
 	torch::Tensor tensor = torch::rand({ 2, 3 });
 	std::cout << tensor << std::endl;
@@ -56,23 +59,17 @@ int main()
 
 	torch::jit::script::Module module;
 
-	std::string mobilesam_predictor =
-		"/home/cyrill/Documents/models/mobilesam_predictor.pt";
-
-	std::string vit_image_embedding =
-		"/home/cyrill/Documents/models/vit_image_embedding.pt";
-
 	try {
-		module = torch::jit::load(mobilesam_predictor);
+		module = torch::jit::load(
+			"/home/cyrill/dev/models/deeplabv3.pt");
 	} catch (const c10::Error &e) {
-		std::cerr << e.what() <<  "error loading the model\n";
+		std::cerr << "error loading the model\n";
 		return -1;
 	}
 
 	std::cout << "Successfully loaded\n";
 	cv::Mat jpg;
-	jpg = cv::imread("/home/cyrill/Downloads/img.jpg");
-
+	jpg = cv::imread("/home/cyrill/Pictures/deeplab.jpg");
 	if (jpg.empty()) {
 		std::cout << "!!! Failed imread(): image not found"
 			  << std::endl;
@@ -80,11 +77,6 @@ int main()
 	}
 
 	std::cout << "Seems to have worked" << std::endl;
-
-	// just check if this (I hope it does)
-	//
-	return 0;
-
 	cv::Mat resized;
 	try {
 		cv::resize(jpg, resized, cv::Size(inputSize, inputSize));
@@ -93,5 +85,4 @@ int main()
 	}
 
 	// todo: normalize with mean, std
-	// https://github.com/pytorch/pytorch/issues/14273
 }
