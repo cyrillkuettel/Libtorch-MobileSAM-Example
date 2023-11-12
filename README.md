@@ -6,6 +6,7 @@ The project expects libtorch/ in the top-level direcotry. I have not included th
 
 Download here (It's importatnt that you use the `cxx11 ABI` version, which works with OpenCV):
 
+## Getting started:
 ```bash
 wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.13.0%2Bcpu.zip
 unzip libtorch-cxx11-abi-shared-with-deps-1.13.0+cpu.zip
@@ -24,5 +25,11 @@ cmake --build . --config Release
 ```
 Note the `..` after the command! This references the parent directory.
 
-For subsequent builds, you can use the Makefile for convenience.
+For subsequent builds you can just type: 
+
+## Run:
+```
+make
+```
+
 For first time install troubleshooting, see the [pytorch cppdocs](https://pytorch.org/cppdocs/installing.html), which this information is based on.
