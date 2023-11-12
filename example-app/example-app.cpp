@@ -112,16 +112,16 @@ cv::Mat tensorToMat(torch::Tensor tensor) {
     return mat.clone(); // Clone to safely detach from the tensor data
 }
 
-// Function to show mask on image
+
 void showMask(const torch::Tensor& mask, cv::Mat& image) {
 
-    // random color
+   
+    if (mask.numel() == 0) {
+        throw std::runtime_error("Empty mask tensor.");
+    }
+
     cv::Scalar color = cv::Scalar(30, 144, 255, 0.6 * 255);
-
-    // Convert the mask to a cv::Mat
     cv::Mat maskMat = tensorToMat(mask);
-
-    // Convert the grayscale mask to a colored mask
     cv::Mat coloredMask;
     cv::cvtColor(maskMat, coloredMask, cv::COLOR_GRAY2BGR);
     coloredMask *= color;
@@ -134,6 +134,11 @@ void showMask(const torch::Tensor& mask, cv::Mat& image) {
 void showPoints(const torch::Tensor &coords, const torch::Tensor &labels,
 		cv::Mat &image, int markerSize = 375)
 {
+    
+    if (coords.numel() == 0 || labels.numel() == 0) {
+        throw std::runtime_error("Empty coordinates or labels tensor.");
+    }
+
 	auto posPoints = coords.index({ labels == 1 });
 	auto negPoints = coords.index({ labels == 0 });
 
