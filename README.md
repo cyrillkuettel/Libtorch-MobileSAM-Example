@@ -2,23 +2,23 @@
 
 A minimal example of how ot use Libtorch with MobileSAM and OpenCV in the same project.
 
-## Getting started
-This project depends on Libtorch 1.13.0 and OpenCV 1.13.0
+## Quick Start
 
-Other versions might also work, but are untested. 
-### Additional dependencies:
+###  dependencies
 ```console
  sudo apt install build-essential cmake git pkg-config libgtk-3-dev libavcodec-dev libavformat-dev libswscale-dev libv4l-dev  libxvidcore-dev libx264-dev libjpeg-dev libpng-dev libtiff-dev gfortran openexr libatlas-base-dev python3-dev python3-numpy  libtbb2 libtbb-dev libdc1394-22-dev
 ```
-### Libtorch 
-The project expects `libtorch/` in the top-level direcotry. I have not included this in the repository to keep it light. 
+Note: You need to download Libtorch 1.13.0 and install OpenCV 4.5.4.
 
-Download [this version from pytorch.org](https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.13.0%2Bcpu.zip),  rename the folder to 'libtorch' if it isn't already.
-It's important that you use the `cxx11 ABI` version, which works with OpenCV)
+(Other versions _might_ work, but have not been tested untested)
+### Libtorch 
+The project expects `libtorch/` in the top-level directory. I have not included this because its 727MB. 
+
+Just download [this version from pytorch.org](https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.13.0%2Bcpu.zip),  rename the folder to 'libtorch' and put it in the repository at top level.
 
 ```bash
 wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.13.0%2Bcpu.zip
-unzip libtorch-cxx11-abi-shared-with-deps-1.13.0+cpu.zip
+unzip libtorch-cxx11-abi-shared-with-deps-1.13.0+cpu.zip # important that it's the  `cxx11 ABI` version, works with OpenCV)
 ```
 
 ### OpenCV 
@@ -60,7 +60,7 @@ cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=/absolute/path/to/libtorch ..
 cmake --build . --config Debug
 ```
 
-For subsequent builds you can use the makefile just type: 
+From now on, you can just type:
 
 ```
 make

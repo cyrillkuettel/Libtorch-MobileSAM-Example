@@ -1,5 +1,6 @@
 .idea/
 example-app/build
+
 libtorch/
 
 # Prerequisites

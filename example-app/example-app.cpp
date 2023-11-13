@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <string>
 #include <sstream>
+#include <stdlib.h>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -40,23 +41,20 @@ ImageParams parseParams(int argc, char *argv[])
 {
 	ImageParams params;
 
-	std::string defaultImagePath =
-		"/home/cyrill/ba/MobileSAM/notebooks/images/picture2.jpg";
+	// adjust what you want, or use the input arguments:
 
+	std::string defaultImagePath =
+		"/home/cyrill/pytorch/libtorch-opencv/example-app/images/picture1.jpg";
 	std::string defaultMobileSamPredictor =
 		"/home/cyrill/pytorch/libtorch-opencv/example-app/models/mobilesam_predictor.pt";
 	std::string defaultVitImageEmbedding =
 		"/home/cyrill/pytorch/libtorch-opencv/example-app/models/vit_image_embedding.pt";
 
-	// Set image path
 	params.image = (argc > 1) ? argv[1] : defaultImagePath;
-
-	// Set mobilesam_predictor and vit_image_embedding paths
 	params.mobilesamPredictor = (argc > 2) ? argv[2] :
 						 defaultMobileSamPredictor;
 	params.vitImageEmbedding = (argc > 3) ? argv[3] :
 						defaultVitImageEmbedding;
-
 	return params;
 }
 
@@ -114,7 +112,7 @@ void showMask(const torch::Tensor &mask, cv::Mat &image)
 	}
 
 	cv::Scalar color = cv::Scalar(30, 144, 255); // BGR color
-	double alpha = 0.6; // Transparency factor
+	double alpha = 0.3; // Transparency factor
 
 	cv::Mat maskMat = tensorToMat(mask);
 	cv::Mat coloredMask;
@@ -146,7 +144,7 @@ void showPoints(const torch::Tensor &coords, const torch::Tensor &labels,
 		int x = batch[i][0].item<int>();
 		int y = batch[i][1].item<int>();
 		cv::circle(image, cv::Point(x, y), markerSize,
-			   cv::Scalar(0, 0, 255), -1); // Red color for points
+			   cv::Scalar(0, 255, 0), -1); // Green color for points
 	}
 }
 
@@ -173,8 +171,19 @@ void visualizeResults(cv::Mat &image, const torch::Tensor &masks,
 
 		std::string filename = "MobileSAM" + std::to_string(i + 1) +
 				       "_" + timestamp + ".jpg";
+
 		cv::imwrite(filename, displayImage);
-		std::cout << "Saved output image: " << filename << std::endl;
+
+		char actualpath[PATH_MAX + 1];
+		char *ptr;
+		ptr = realpath(filename.c_str(), actualpath);
+
+		if (ptr) {
+			std::cout << "Saved output image:" << ptr << std::endl;
+		} else {
+			std::cout << "Saved output image: " << filename
+				  << std::endl;
+		}
 
 		cv::imshow("Visualization - Mask " + std::to_string(i + 1) +
 				   ", Score: " +
@@ -201,7 +210,7 @@ runInference(torch::Tensor inputTensor,
 	// Here we differ from the orignial python example because we have two
 	// models for pytroch lite interpreter
 	std::vector<torch::jit::IValue> inputs;
-	inputs.push_back(inputTensor);
+	inputs.emplace_back(inputTensor);
 
 	// image embeddings:
 	auto features = imageEmbeddingModel.forward(inputs).toTensor();
@@ -287,25 +296,6 @@ int main(int argc, char *argv[])
 	std::cout << "The current OpenCV version is " << CV_VERSION << "\n";
 	std::cout << "LibTorch version: " << TORCH_VERSION << std::endl;
 
-	const float pointx = 10.0f;
-	const float pointy = 10.0f;
-
-	// Initialize a vector with one point followed by zeros to make it up to 5 points
-	std::vector<float> pointCoords = { pointx, pointy, 0.0f, 0.0f, 0.0f,
-					   0.0f,   0.0f,   0.0f, 0.0f, 0.0f };
-	std::vector<float> pointLabels = { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f };
-
-	auto pointCoordsTensor =
-		torch::tensor(pointCoords, torch::dtype(torch::kFloat32));
-
-	auto pointLabelsTensor =
-		torch::tensor(pointLabels, torch::dtype(torch::kFloat32));
-
-	pointCoordsTensor =
-		pointCoordsTensor.reshape({ 1, 5, 2 }).to(torch::kFloat32);
-	pointLabelsTensor =
-		pointLabelsTensor.reshape({ 1, 5 }).to(torch::kFloat32);
-
 	ImageParams params;
 	try {
 		params = parseParams(argc, argv);
@@ -352,6 +342,25 @@ int main(int argc, char *argv[])
 	img_converted.convertTo(img, CV_8UC3);
 
 	torch::Tensor inputTensor = preProcess(img, inputWidth, inputHeight);
+
+	// define some input_points for the model:
+//	std::vector<float> pointCoords = { 371.0f, 190.0f, 374.0f, 190.0f, 365.0f, 190.0f, 371.0f, 190.0f, 371.0f, 190.0f };
+
+    std::vector<float> pointCoords(10, 0.0f);
+	pointCoords[0] = 20.0f;
+	pointCoords[1] = 20.0f;
+	std::vector<float> pointLabels = { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+
+	auto pointCoordsTensor =
+		torch::tensor(pointCoords, torch::dtype(torch::kFloat32));
+
+	auto pointLabelsTensor =
+		torch::tensor(pointLabels, torch::dtype(torch::kFloat32));
+
+	pointCoordsTensor =
+		pointCoordsTensor.reshape({ 1, 5, 2 }).to(torch::kFloat32);
+	pointLabelsTensor =
+		pointLabelsTensor.reshape({ 1, 5 }).to(torch::kFloat32);
 
 	// 'iou_predictions': The model's predictions of mask quality, in shape BxC.
 	// 'masks': Batched binary mask predictions with shape BxCxHxW,
