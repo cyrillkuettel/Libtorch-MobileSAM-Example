@@ -310,16 +310,13 @@ int main(int argc, char *argv[])
 	std::cout << "The current OpenCV version is " << CV_VERSION << "\n";
 	std::cout << "LibTorch version: " << TORCH_VERSION << std::endl;
 
-	// prepare pointCoords and pointLabels
-
-	float point = 5.0f;
 	// todo: 5 points as input shape is somehow required i'm not sure how we can get only one...
 	// are the others just zero?
 
-	// This initializes a vector of size 10, all elements set to 20.0f
-	std::vector<float> pointCoords(10, point);
-	// Initializes a vector of size 5, all elements set to 1.0f
-	std::vector<float> pointLabels(5, 1.0f);
+	const float point = 200.0f;
+	    // Initialize a vector with one point followed by zeros to make it up to 5 points
+	std::vector<float> pointCoords = {point, point, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+    	std::vector<float> pointLabels = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 
 	auto pointCoordsTensor =
 		torch::tensor(pointCoords, torch::dtype(torch::kFloat32));
