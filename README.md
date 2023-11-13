@@ -2,6 +2,8 @@
 
 A minimal example of how ot use Libtorch with MobileSAM and OpenCV in the same project.
 
+[screencast.webm](example-app%2Fscreencast%2Fscreencast.webm)
+
 ## Quick Start
 
 ###  dependencies
