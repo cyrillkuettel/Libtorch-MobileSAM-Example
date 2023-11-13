@@ -1,11 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <vector>
-#include <cassert>
 #include <stdexcept>
-#include <algorithm>
-#include <vector>
-#include <iterator>
 #include <string>
 #include <sstream>
 
@@ -18,12 +14,16 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 
-const int inputSize = 1024;
 const int inputWidth = 1024;
 const int inputHeight = 1024;
 
 const std::vector<float> pixel_mean = { 123.675, 116.28, 103.53 };
 const std::vector<float> pixel_std = { 58.395, 57.12, 57.375 };
+
+// This command line application requires three arguments:
+// 1. <image_path>: The path to the image file you want to process (e.g., "img.jpg").
+// 2. <mobilesam_predictor_model_path>: The path to the MobileSAM predictor model file
+// 3. <vit_image_embedding_model_path>: The path to the image embedding model file
 
 // usage: ./example-app img.jpg mobilesam_preditor.pt vit_image_embedding.pt
 
@@ -55,7 +55,6 @@ ImageParams parseParams(int argc, char *argv[])
 
 	return params;
 }
-
 
 torch::Tensor preProcess(cv::Mat &img, int inputWidth, int inputHeight)
 {
@@ -94,26 +93,28 @@ torch::Tensor preProcess(cv::Mat &img, int inputWidth, int inputHeight)
 }
 
 // Function to convert torch::Tensor to cv::Mat
-cv::Mat tensorToMat(torch::Tensor tensor) {
-    // Ensure the tensor is in the CPU memory
-    tensor = tensor.to(torch::kCPU);
+cv::Mat tensorToMat(torch::Tensor tensor)
+{
+	// Ensure the tensor is in the CPU memory
+	tensor = tensor.to(torch::kCPU);
 
-    // Convert to a 2D tensor for image processing
-    tensor = tensor.squeeze().detach();
+	// Convert to a 2D tensor for image processing
+	tensor = tensor.squeeze().detach();
 
-    // Convert to a byte tensor if it's not already
-    if (tensor.dtype() != torch::kU8) {
-        tensor = tensor.to(torch::kU8);
-    }
+	// Convert to a byte tensor if it's not already
+	if (tensor.dtype() != torch::kU8) {
+		tensor = tensor.to(torch::kU8);
+	}
 
-    // Create a Mat object with proper size and type
-    cv::Mat mat(tensor.size(0), tensor.size(1), CV_8UC1, tensor.data_ptr<uchar>());
+	// Create a Mat object with proper size and type
+	cv::Mat mat(tensor.size(0), tensor.size(1), CV_8UC1,
+		    tensor.data_ptr<uchar>());
 
-    return mat.clone(); // Clone to safely detach from the tensor data
+	return mat.clone(); // Clone to safely detach from the tensor data
 }
 
-
-void showMask(const torch::Tensor& mask, cv::Mat& image) {
+void showMask(const torch::Tensor &mask, cv::Mat &image)
+{
 	if (mask.numel() == 0) {
 		throw std::runtime_error("Empty mask tensor.");
 	}
@@ -141,39 +142,21 @@ void showMask(const torch::Tensor& mask, cv::Mat& image) {
 	cv::addWeighted(image, 1.0 - alpha, coloredMask, alpha, 0.0, image);
 }
 
-
-// Function to show points
-void showPoints(const torch::Tensor &coords, const torch::Tensor &labels,
-		cv::Mat &image, int markerSize = 375)
+void showPoints(const torch::Tensor &coords, const torch::Tensor &labels, cv::Mat &image, int markerSize = 20)
 {
-    
-    if (coords.numel() == 0 || labels.numel() == 0) {
-        throw std::runtime_error("Empty coordinates or labels tensor.");
-    }
-
-	auto posPoints = coords.index({ labels == 1 });
-	auto negPoints = coords.index({ labels == 0 });
-
-	// Drawing positive points
-	for (int i = 0; i < posPoints.size(0); i++) {
-		cv::circle(image,
-			   cv::Point(posPoints[i][0].item<int>(),
-				     posPoints[i][1].item<int>()),
-			   markerSize, cv::Scalar(0, 255, 0),
-			   -1); // Green color for positive points
+	if (coords.sizes().size() != 3 || coords.size(1) != 5 || coords.size(2) != 2) {
+		throw std::runtime_error("coords must be a 3D tensor with shape [1, N, 2].");
 	}
 
-	// Drawing negative points
-	for (int i = 0; i < negPoints.size(0); i++) {
-		cv::circle(image,
-			   cv::Point(negPoints[i][0].item<int>(),
-				     negPoints[i][1].item<int>()),
-			   markerSize, cv::Scalar(0, 0, 255),
-			   -1); // Red color for negative points
+	auto batch = coords[0];
+	std::cout << "Showing the" << batch.size(0) << "points.\n";
+	for (int i = 0; i < batch.size(0); ++i) {
+		int x = batch[i][0].item<int>();
+		int y = batch[i][1].item<int>();
+		cv::circle(image, cv::Point(x, y), markerSize, cv::Scalar(0, 0, 255), -1); // Red color for points
 	}
 }
 
-// Function to show box
 void showBox(const torch::Tensor &box, cv::Mat &image)
 {
 	int x0 = box[0].item<int>();
@@ -191,6 +174,8 @@ void visualizeResults(cv::Mat &image, const torch::Tensor &masks,
 		      const torch::Tensor &pointCoords,
 		      const torch::Tensor &pointLabels)
 {
+	std::cout << "Visualizing " << masks.size(0) << " masks.\n";
+
 	// Loop through each mask
 	for (int i = 0; i < masks.size(0); i++) {
 		cv::Mat displayImage = image.clone();
@@ -198,6 +183,17 @@ void visualizeResults(cv::Mat &image, const torch::Tensor &masks,
 		showPoints(pointCoords, pointLabels, displayImage);
 		// Show box if needed
 		// showBox(box, displayImage);
+
+		std::time_t t = std::time(nullptr);
+		std::tm tm = *std::localtime(&t);
+		std::ostringstream oss;
+		oss << std::put_time(&tm, "%Y%m%d_%H%M%S");
+		std::string timestamp = oss.str();
+
+		std::string filename = "MobileSAM" +
+				       std::to_string(i + 1) + "_" + timestamp +
+				       ".jpg";
+		cv::imwrite(filename, displayImage);
 
 		cv::imshow("Visualization - Mask " + std::to_string(i + 1) +
 				   ", Score: " +
@@ -207,17 +203,13 @@ void visualizeResults(cv::Mat &image, const torch::Tensor &masks,
 	}
 }
 
-
-
-std::tuple<torch::Tensor, torch::Tensor, torch::Tensor> runInference(
-    torch::Tensor inputTensor,
-    torch::jit::script::Module &imageEmbeddingModel,
-    torch::jit::script::Module &predictorModel,
-    torch::Tensor &pointCoordsTensor,
-    torch::Tensor &pointLabelsTensor,
-    int originalImageHeight,
-    int originalImageWidth) {
-        
+std::tuple<torch::Tensor, torch::Tensor, torch::Tensor>
+runInference(torch::Tensor inputTensor,
+	     torch::jit::script::Module &imageEmbeddingModel,
+	     torch::jit::script::Module &predictorModel,
+	     torch::Tensor &pointCoordsTensor, torch::Tensor &pointLabelsTensor,
+	     int originalImageHeight, int originalImageWidth)
+{
 	// up until here, this was the `SamPredictor.set_image` function which does
 	// all the pre-processing
 	std::cout << "preProcess ok" << std::endl;
@@ -248,8 +240,6 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor> runInference(
 	//kmultimask_output=True,
 	//)
 
-
-
 	/**
      * predictorModel.forward(
         Tensor image_embeddings, 
@@ -273,7 +263,7 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor> runInference(
 	auto hasMaskInput = torch::tensor({ 0 }, torch::dtype(torch::kFloat32));
 	std::vector<torch::jit::IValue> inputs2;
 	inputs2.push_back(features); // image_embeddings
-                                 //
+		//
 	inputs2.push_back(pointCoordsTensor);
 	inputs2.push_back(pointLabelsTensor);
 	inputs2.push_back(maskInput);
@@ -311,25 +301,26 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor> runInference(
 	torch::Tensor iou_predictions = outputs[1].toTensor();
 	torch::Tensor low_res_masks = outputs[2].toTensor();
 
-    return std::make_tuple(masks, iou_predictions, low_res_masks);
+	return std::make_tuple(masks, iou_predictions, low_res_masks);
 }
-
 
 int main(int argc, char *argv[])
 
 {
-    std::cout << "The current OpenCV version is " << CV_VERSION << "\n";
-    std::cout << "LibTorch version: " << TORCH_VERSION << std::endl;
+	std::cout << "The current OpenCV version is " << CV_VERSION << "\n";
+	std::cout << "LibTorch version: " << TORCH_VERSION << std::endl;
 
-    // prepare pointCoords and pointLabels
-	// todo: this is a bit goofy, replace with actual points  
-	std::vector<float> pointCoords = {
-		20.0f, 20.0f, 20.0f, 20.0f, 20.0f,
-		20.0f, 20.0f, 20.0f, 20.0f, 20.0f
-	}; // Random points as floats
-	std::vector<float> pointLabels = { 1.0f, 1.0f, 1.0f, 1.0f,
-					   1.0f }; 
-                               
+	// prepare pointCoords and pointLabels
+
+	float point = 5.0f;
+	// todo: 5 points as input shape is somehow required i'm not sure how we can get only one...
+	// are the others just zero?
+
+	// This initializes a vector of size 10, all elements set to 20.0f
+	std::vector<float> pointCoords(10, point);
+	// Initializes a vector of size 5, all elements set to 1.0f
+	std::vector<float> pointLabels(5, 1.0f);
+
 	auto pointCoordsTensor =
 		torch::tensor(pointCoords, torch::dtype(torch::kFloat32));
 
@@ -340,7 +331,6 @@ int main(int argc, char *argv[])
 		pointCoordsTensor.reshape({ 1, 5, 2 }).to(torch::kFloat32);
 	pointLabelsTensor =
 		pointLabelsTensor.reshape({ 1, 5 }).to(torch::kFloat32);
-
 
 	ImageParams params;
 	try {
@@ -390,20 +380,17 @@ int main(int argc, char *argv[])
 	img_converted.convertTo(img, CV_8UC3);
 
 	torch::Tensor inputTensor = preProcess(img, inputWidth, inputHeight);
-                              
-    torch::Tensor masks, iou_predictions, low_res_masks;
-    std::tie(masks, iou_predictions, low_res_masks) = runInference(
-        inputTensor,
-        imageEmbeddingModel,
-        predictorModel,
-        pointCoordsTensor,
-        pointLabelsTensor,
-        originalImageHeight,
-        originalImageWidth);
 
-    std::cout << masks.sizes() << std::endl;
+	torch::Tensor masks, iou_predictions, low_res_masks;
+	std::tie(masks, iou_predictions, low_res_masks) =
+		runInference(inputTensor, imageEmbeddingModel, predictorModel,
+			     pointCoordsTensor, pointLabelsTensor,
+			     originalImageHeight, originalImageWidth);
 
-    visualizeResults(jpg, masks, iou_predictions, pointCoordsTensor, pointLabelsTensor);
+	std::cout << masks.sizes() << std::endl;
 
-    return 0;
+	visualizeResults(jpg, masks, iou_predictions, pointCoordsTensor,
+			 pointLabelsTensor);
+
+	return 0;
 }
