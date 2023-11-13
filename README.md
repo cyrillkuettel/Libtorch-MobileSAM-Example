@@ -4,10 +4,34 @@ A minimal example of how to use Libtorch with [MobileSAM](https://github.com/Cha
 
 [Screencast from 13.11.2023 03:25:12.webm](https://github.com/cyrillkuettel/Libtorch-MobileSAM-Example/assets/36520284/f5311c46-644f-45a7-adf3-a60bc853f4a9)
 
+## Description
+
+The main goal of `Libtorch-MobileSAM-Example` is run traced or scripted Torchscript models. This provides the foundations for eventually running this on mobile devices (Pytorch Mobile).
 
 ## Quick Start
+### Models
 
-###  dependencies
+The models are included in the repo, alternatively, you can export them with this script [convert_pytorch_mobile.py](https://github.com/cmarschner/MobileSAM/blob/cmarschner/convert/scripts/convert_pytorch_mobile.py).
+
+<details open>
+    <summary>Models</summary>
+    <ul>
+        <li>
+            <a href="https://github.com/cyrillkuettel/Libtorch-MobileSAM-Example/tree/master/example-app/models/">cpu_mobilesam_predictor_mobile_optimized_lite_interpreter.ptl</a>
+        </li>
+        <li>
+            <a href="https://github.com/cyrillkuettel/Libtorch-MobileSAM-Example/blob/master/example-app/models/cpu_vit_image_embedding_mobile_optimized_lite_interpreter.ptl">pu_vit_image_embedding_mobile_optimized_lite_interpreter.ptl</a>
+        </li>
+        <li>
+            <a href="https://github.com/cyrillkuettel/Libtorch-MobileSAM-Example/blob/master/example-app/models/mobilesam_predictor.pt">mobilesam_predictor.pt</a>
+        </li>
+        <li>
+            <a href="https://github.com/cyrillkuettel/Libtorch-MobileSAM-Example/blob/master/example-app/models/vit_image_embedding.pt">vit_image_embedding.pt</a>
+        </li>
+    </ul>
+</details>
+
+###  Dependencies
 ```console
  sudo apt install build-essential cmake git pkg-config libgtk-3-dev libavcodec-dev libavformat-dev libswscale-dev libv4l-dev  libxvidcore-dev libx264-dev libjpeg-dev libpng-dev libtiff-dev gfortran openexr libatlas-base-dev python3-dev python3-numpy  libtbb2 libtbb-dev libdc1394-22-dev
 ```
@@ -68,6 +92,8 @@ From now on, you can just type:
 ```
 make
 ```
+
+
 
 ## Information on Libtorch
 For first time install troubleshooting, see the [pytorch cppdocs](https://pytorch.org/cppdocs/installing.html), which this information is based on.
