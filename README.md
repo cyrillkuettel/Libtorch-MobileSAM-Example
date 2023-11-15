@@ -40,14 +40,12 @@ The models are included in the repo, alternatively, you can export them with thi
 </details>
 
 <details>
-    <summary>Model input size.</summary>
-    <p> (Source:
-        [notebooks/onnx_model_example.ipynb](https://github.com/ChaoningZhang/MobileSAM/blob/12d80d4e32b277de299130d8ce28cc949fb54b6c/notebooks/onnx_model_example.ipynb))</p>
+<summary>Model input size. Source:
+    <a href="https://github.com/ChaoningZhang/MobileSAM/blob/12d80d4e32b277de299130d8ce28cc949fb54b6c/notebooks/onnx_model_example.ipynb">notebooks/onnx_model_example.ipynb</a></summary>
     <ul>
         <li>
             `image_embeddings`: The image embedding from predictor.get_image_embedding(). Has a batch index of length 1.
         </li>
-
         <li>
             `point_coords`: Coordinates of sparse input prompts, corresponding to both point inputs and box inputs.
             Boxes
@@ -65,16 +63,13 @@ The models are included in the repo, alternatively, you can export them with thi
             mask
             input. In this case, it can just be zeros.
         </li>
-
         <li>
             `has_mask_input`: An indicator for the mask input. 1 indicates a mask input, 0 indicates no mask input.
         </li>
-
         <li>
             `orig_im_size`: The size of the input image in (H,W) format, before any transformation.
         </li>
     </ul>
-
 </details>
 
 
