@@ -8,6 +8,14 @@ A minimal example of how to use Libtorch with [MobileSAM](https://github.com/Cha
 
 The main goal of `Libtorch-MobileSAM-Example` is run traced or scripted Torchscript models. This provides the foundations for eventually running this on mobile devices (Pytorch Mobile).
 
+## Todo
+
+- [ ] Bug: Translate input coordinates to longest side for (1024x1024)
+- [ ] Feature: Refactor to be object oriented: `class Sam { ... }`
+- [ ] Feature: Implement [automatic_mask_generator](https://github.com/ChaoningZhang/MobileSAM/blob/master/mobile_sam/automatic_mask_generator.py)
+
+
+
 ## Quick Start
 ### Models
 
