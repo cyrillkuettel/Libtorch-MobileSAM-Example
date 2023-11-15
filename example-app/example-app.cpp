@@ -44,11 +44,11 @@ ImageParams parseParams(int argc, char *argv[])
 	// adjust what you want, or use the input arguments:
 
 	std::string defaultImagePath =
-		"/home/cyrill/pytorch/libtorch-opencv/example-app/images/picture1.jpg";
+		"/Users/cyrill/Libtorch-MobileSAM-Example/example-app/images/picture1.jpg";
 	std::string defaultMobileSamPredictor =
-		"/home/cyrill/pytorch/libtorch-opencv/example-app/models/mobilesam_predictor.pt";
+		"/Users/cyrill/Libtorch-MobileSAM-Example/example-app/models/mobilesam_predictor.pt";
 	std::string defaultVitImageEmbedding =
-		"/home/cyrill/pytorch/libtorch-opencv/example-app/models/vit_image_embedding.pt";
+		"/Users/cyrill/Libtorch-MobileSAM-Example/example-app/models/vit_image_embedding.pt";
 
 	params.image = (argc > 1) ? argv[1] : defaultImagePath;
 	params.mobilesamPredictor = (argc > 2) ? argv[2] :

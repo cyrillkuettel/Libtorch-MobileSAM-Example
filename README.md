@@ -93,26 +93,6 @@ cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=/absolute/path/to/libtorch ..
 cmake --build . --config Debug
 ```
 
-## Mac specific
-```
-1. Install gcc compiler using homebrew. (install homebrew if you haven't already)
-
-    brew install gcc 
-
-2. Suppose brew installs gcc-13 version on your system, check using:
-
-    gcc-13 --version
-
-3. We have to additionally set this `-DCMAKE_CXX_COMPILER=`:
-
- replace  `-DCMAKE_PREFIX_PATH` with your absolute path where you have
-libtorch.
-```
-cmake -DCMAKE_BUILD_TYPE=Debug  -DCMAKE_CXX_COMPILER=$(which g++-13) -DCMAKE_C_COMPILER=$(which gcc-13) -DCMAKE_PREFIX_PATH=/absolute/path/to/Libtorch-MobileSAM-Example/libtorch ..
-```
-
-
-
 From now on, you can just type:
 
 ```
