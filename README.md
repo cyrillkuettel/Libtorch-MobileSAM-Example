@@ -40,10 +40,16 @@ The models are included in the repo, alternatively, you can export them with thi
 </details>
 
 ###  Dependencies
+#### Linux: 
 ```console
  sudo apt install build-essential cmake git pkg-config libgtk-3-dev libavcodec-dev libavformat-dev libswscale-dev libv4l-dev  libxvidcore-dev libx264-dev libjpeg-dev libpng-dev libtiff-dev gfortran openexr libatlas-base-dev python3-dev python3-numpy  libtbb2 libtbb-dev libdc1394-22-dev
 ```
-Note: You need to download Libtorch 1.13.0 and install OpenCV 4.5.4.
+
+#### MacOS: 
+```console
+brew install cmake pkg-config jpeg libpng libtiff openexr eigen tbb
+```
+Note: You need Libtorch 1.13.0+ and and OpenCV 4.5.4+
 
 (Other versions _might_ work, but have not been tested untested)
 ### Libtorch 
@@ -51,7 +57,7 @@ The project expects `libtorch/` in the top-level directory. I have not included 
 
 #### Mac M1 Chips
 
-Pytorch pre-built binaries for Mac M2 can be found here [libtorch-mac-m1/releases](https://github.com/mlverse/libtorch-mac-m1/releases) (no official builds at the point of writing this.) 
+Pre-built binaries of pytorch for for Mac M2 can be found here [libtorch-mac-m1/releases](https://github.com/mlverse/libtorch-mac-m1/releases) (no official builds at the point of writing this.) 
 
 #### Linux
 
