@@ -41,7 +41,13 @@ Note: You need to download Libtorch 1.13.0 and install OpenCV 4.5.4.
 ### Libtorch 
 The project expects `libtorch/` in the top-level directory. I have not included this because its 727MB. 
 
-Just download [this version from pytorch.org](https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.13.0%2Bcpu.zip),  rename the folder to 'libtorch' and put it in the repository at top level.
+#### Mac M1 Chips
+
+Pytorch pre-built binaries for Mac M2 can be found here [libtorch-mac-m1/releases](https://github.com/mlverse/libtorch-mac-m1/releases) (no official builds at the point of writing this.) 
+
+#### Linux
+
+Just download [this version from pytorch.org](https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.13.0%2Bcpu.zip), rename the folder to 'libtorch' and put it in the repository at top level.
 
 ```bash
 wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.13.0%2Bcpu.zip
@@ -50,11 +56,11 @@ unzip libtorch-cxx11-abi-shared-with-deps-1.13.0+cpu.zip # important that it's t
 
 ### OpenCV 
 Install OpenCV for your operating system. 
-#### Linux
+#### Unix/MacOS
 
 
 ```bash
-mkdir ~/opencv && cd opencv
+mkdir ~/opencv && cd ~/opencv
 git clone https://github.com/opencv/opencv_contrib.git
 git clone https://github.com/opencv/opencv.git
 cd opencv
@@ -63,8 +69,8 @@ cd build
 
 cmake -D CMAKE_BUILD_TYPE=RELEASE \
 	-D CMAKE_INSTALL_PREFIX=/usr/local \
-	-D INSTALL_C_EXAMPLES=ON \
-	-D INSTALL_PYTHON_EXAMPLES=ON \
+	-D INSTALL_C_EXAMPLES=OFf \
+	-D INSTALL_PYTHON_EXAMPLES=OFF \
 	-D OPENCV_GENERATE_PKGCONFIG=ON \
 	-D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
         -D PYTHON_EXECUTABLE=/usr/bin/python3 \
@@ -86,6 +92,26 @@ cd build
 cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=/absolute/path/to/libtorch ..
 cmake --build . --config Debug
 ```
+
+## Mac specific
+```
+1. Install gcc compiler using homebrew. (install homebrew if you haven't already)
+
+    brew install gcc 
+
+2. Suppose brew installs gcc-13 version on your system, check using:
+
+    gcc-13 --version
+
+3. We have to additionally set this `-DCMAKE_CXX_COMPILER=`:
+
+ replace  `-DCMAKE_PREFIX_PATH` with your absolute path where you have
+libtorch.
+```
+cmake -DCMAKE_BUILD_TYPE=Debug  -DCMAKE_CXX_COMPILER=$(which g++-13) -DCMAKE_C_COMPILER=$(which gcc-13) -DCMAKE_PREFIX_PATH=/absolute/path/to/Libtorch-MobileSAM-Example/libtorch ..
+```
+
+
 
 From now on, you can just type:
 
