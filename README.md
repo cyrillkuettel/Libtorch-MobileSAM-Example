@@ -39,6 +39,46 @@ The models are included in the repo, alternatively, you can export them with thi
     </ul>
 </details>
 
+<details>
+    <summary>Model input size.</summary>
+    <p> (Source:
+        [notebooks/onnx_model_example.ipynb](https://github.com/ChaoningZhang/MobileSAM/blob/12d80d4e32b277de299130d8ce28cc949fb54b6c/notebooks/onnx_model_example.ipynb))</p>
+    <ul>
+        <li>
+            `image_embeddings`: The image embedding from predictor.get_image_embedding(). Has a batch index of length 1.
+        </li>
+
+        <li>
+            `point_coords`: Coordinates of sparse input prompts, corresponding to both point inputs and box inputs.
+            Boxes
+            are encoded using two points, one for the top-left corner and one for the bottom-right corner. Coordinates
+            must already be transformed to long-side 1024. Has a batch index of length 1.
+        </li>
+        <li>
+            `point_labels`: Labels for the sparse input prompts. 0 is a negative input point, 1 is a positive input
+            point,
+            2 is a top-left box corner, 3 is a bottom-right box corner, and -1 is a padding point. If there is no box
+            input, a single padding point with label -1 and coordinates (0.0, 0.0) should be concatenated.
+        </li>
+        <li>
+            `mask_input`: A mask input to the model with shape 1x1x256x256. This must be supplied even if there is no
+            mask
+            input. In this case, it can just be zeros.
+        </li>
+
+        <li>
+            `has_mask_input`: An indicator for the mask input. 1 indicates a mask input, 0 indicates no mask input.
+        </li>
+
+        <li>
+            `orig_im_size`: The size of the input image in (H,W) format, before any transformation.
+        </li>
+    </ul>
+
+</details>
+
+
+
 ###  Dependencies
 #### Linux: 
 ```console

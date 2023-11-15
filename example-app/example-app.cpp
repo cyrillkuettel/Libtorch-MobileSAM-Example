@@ -44,7 +44,7 @@ ImageParams parseParams(int argc, char *argv[])
 	// adjust what you want, or use the input arguments:
 
 	std::string defaultImagePath =
-		"/Users/cyrill/Libtorch-MobileSAM-Example/example-app/images/picture1.jpg";
+		"/Users/cyrill/Libtorch-MobileSAM-Example/example-app/images/img.jpg";
 	std::string defaultMobileSamPredictor =
 		"/Users/cyrill/Libtorch-MobileSAM-Example/example-app/models/mobilesam_predictor.pt";
 	std::string defaultVitImageEmbedding =
