@@ -1,10 +1,10 @@
 #include "predictor.h"
 
 
-void SamPredictor::set_image(const cv::Mat &jpg) {
+void SamPredictor::setImage(const cv::Mat &image) {
 
     cv::Mat img;
-    cv::cvtColor(jpg.clone(), img, cv::COLOR_BGR2RGB);
+    cv::cvtColor(image.clone(), img, cv::COLOR_BGR2RGB);
 
     originalHeight = img.cols;
     originalWidth = img.rows;
@@ -21,39 +21,32 @@ void SamPredictor::set_image(const cv::Mat &jpg) {
     inputTensor = inputTensor.permute({2, 0, 1}).contiguous();
     inputTensor = inputTensor.unsqueeze(0);
     // set originalWidth and originalHeight as param
-    set_torch_image(inputTensor);
+    setTorchImage(inputTensor);
 }
 
-void SamPredictor::reset_image() {
-    // Implementation to reset the state as needed
-}
-
-void SamPredictor::set_torch_image(torch::Tensor &inputTensor) {
-/*
-    assert (
-            len(transformed_image.shape) == 4
-            and transformed_image.shape[1] == 3
-            and max(*transformed_image.shape[2:]) == self.model.image_encoder.img_size
-    ), f"set_torch_image input must be BCHW with long side {self.model.image_encoder.img_size}."
-    self.reset_image()
-
-    self.original_size = original_image_size
-    self.input_size = tuple(transformed_image.shape[-2:])
-#import pdb; pdb.set_trace()
-    input_image = self.model.preprocess(transformed_image)
-    self.features = self.model.image_encoder(input_image)
-    self.is_image_set = True
-*/
+void SamPredictor::setTorchImage(torch::Tensor &inputTensor) {
 
     if (!(inputTensor.sizes().size() == 4 && inputTensor.size(1) == 3)) {
         throw std::runtime_error(
-                "set_torch_image input must be BCHW with long side");
+                "setTorchImage input must be BCHW with long side");
     }
+    preProcess(inputTensor);
+
+    std::vector<torch::jit::IValue> inputs{inputTensor};
+
+    /** image_encoder (ImageEncoderViT, imageEmbeddingModel):
+     * The backbone used to encode the image into image embeddings
+     * that allow for efficient mask prediction */
+    features = imageEmbeddingModel.forward(inputs).toTensor();
+    isImageSet = true;
+}
+
+void SamPredictor::preProcess(torch::Tensor &inputTensor) {
 
     torch::Tensor tensor_pixel_mean = torch::tensor(pixel_mean);
     torch::Tensor tensor_pixel_std = torch::tensor(pixel_std);
-
-    // Reshape mean and std tensors for broadcasting
+    // Normalize pixel values and pad to a square input.
+    // Normalize colors, Reshape mean and std tensors for broadcasting
     tensor_pixel_mean = tensor_pixel_mean.view({1, 3, 1, 1});
     tensor_pixel_std = tensor_pixel_std.view({1, 3, 1, 1});
     inputTensor = (inputTensor - tensor_pixel_mean) / tensor_pixel_std;
@@ -62,48 +55,51 @@ void SamPredictor::set_torch_image(torch::Tensor &inputTensor) {
     // fixme: is this really the img.cols???
     // this is the already transformed image,
     // therefore this would be 1024 - 1024 = 0
-    int padh = 1024 - input_size.first;
-    int padw = 1024 - input_size.second;
+
+    int64_t h = inputTensor.size(2);
+    int64_t w = inputTensor.size(3);
+
+    int64_t padh = inputSize.first - h;
+    int64_t padw = inputSize.second - w;
+
+    std::cout << "padh: " << padh << std::endl;
+    std::cout << "padw: " << padw << std::endl;
+
     torch::nn::functional::PadFuncOptions padOptions({0, padw, 0, padh});
-    inputTensor = torch::nn::functional::pad(inputTensor, padOptions);
-
-    std::vector<torch::jit::IValue> inputs{inputTensor};
-
-    /** image_encoder (ImageEncoderViT, imageEmbeddingModel):
-     * The backbone used to encode the image into image embeddings
-     * that allow for efficient mask prediction */
-    features = imageEmbeddingModel.forward(inputs).toTensor();
-    is_image_set = true;
+    torch::nn::functional::pad(inputTensor, padOptions);
 }
 
 
+
 std::tuple<torch::Tensor, torch::Tensor, torch::Tensor>
-SamPredictor::predict(const torch::Tensor &pointCoords, const torch::Tensor &pointLabels) {
+SamPredictor::predict(const std::vector<std::vector<float>> &pointCoordsVec, const std::vector<int> &pointLabelsVec,
+                      const torch::Tensor &maskInput, bool maskInputBool) {
 
+    int val = maskInputBool ? 1 : 0;
+    torch::Tensor hasMaskInput = torch::tensor({val}, torch::dtype(torch::kFloat32));
 
-    // int mask_input_size = [4 * x for x in embed_size] == [256, 256]
+    std::vector<float> flattenedPointCoordsVec = linearize(pointCoordsVec);
+    torch::Tensor pointCoordsTensor =
+            torch::tensor(flattenedPointCoordsVec, torch::dtype(torch::kFloat32));
 
-    auto maskInput =
-            torch::zeros({1, 1, 256, 256}, torch::dtype(torch::kFloat32));
+    torch::Tensor pointLabelsTensor =
+            torch::tensor(pointLabelsVec, torch::dtype(torch::kFloat32));
+
+    pointCoordsTensor =
+            pointCoordsTensor.reshape({1, 5, 2}).to(torch::kFloat32);
+    pointLabelsTensor =
+            pointLabelsTensor.reshape({1, 5}).to(torch::kFloat32);
 
     //btw. why is the tensor size [1500, 2250]?
-    auto origImgSize =
+    torch::Tensor origImgSize =
             torch::tensor({originalHeight, originalWidth},
                           torch::dtype(torch::kFloat32));
 
-    auto hasMaskInput = torch::tensor({0}, torch::dtype(torch::kFloat32));
-    std::vector<torch::jit::IValue> inputs2;
-    inputs2.emplace_back(features); // image_embeddings
-    inputs2.emplace_back(pointCoords);
-    inputs2.emplace_back(pointLabels);
-    inputs2.emplace_back(maskInput);
-    inputs2.emplace_back(hasMaskInput);
-    inputs2.emplace_back(origImgSize);
+    std::vector<torch::jit::IValue> inputs2 = {features, pointCoordsTensor, pointLabelsTensor, maskInput, hasMaskInput,
+                                               origImgSize};
 
-    auto modeloutput = predictorModel.forward(inputs2);
-    // Accessing output tensors
-
-    auto outputs = modeloutput.toTuple()->elements();
+    auto modelOutput = predictorModel.forward(inputs2);
+    auto outputs = modelOutput.toTuple()->elements();
 
     std::cout << "output tensors informations:" << std::endl;
 
@@ -134,3 +130,9 @@ SamPredictor::predict(const torch::Tensor &pointCoords, const torch::Tensor &poi
 
 }
 
+void SamPredictor::resetImage() {
+    isImageSet = false;
+    features = torch::Tensor();
+    originalHeight = 0;
+    originalWidth = 0;
+}
