@@ -213,7 +213,8 @@ runInference(torch::Tensor inputTensor,
 	inputs.emplace_back(inputTensor);
 
 	// image embeddings:
-	auto features = imageEmbeddingModel.forward(inputs).toTensor();
+	torch::Tensor features = imageEmbeddingModel.forward(inputs).toTensor();
+    std::cout << features.type().str() << std::endl;
 
 	// now we hvae features. So now basically we are at a state that is similar to the python state of where we have called
 	// predictor = SAMPredictor()
@@ -341,7 +342,7 @@ int main(int argc, char *argv[])
 	// img_converted.convertTo(img, CV_8UC3) seems redundant in this context because the image, once loaded and potentially color-converted, is already in the CV_8UC3 format. But it pays to be paranoid...
 	img_converted.convertTo(img, CV_8UC3);
 
-	torch::Tensor inputTensor = preProcess(img, inputWidth, inputHeight);
+
 
 	// define some input_points for the model:
 //	std::vector<float> pointCoords = { 371.0f, 190.0f, 374.0f, 190.0f, 365.0f, 190.0f, 371.0f, 190.0f, 371.0f, 190.0f };
