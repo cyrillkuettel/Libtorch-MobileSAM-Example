@@ -30,9 +30,7 @@ void ResizeLongestSide::apply_image(cv::Mat &image)
 	std::cout << "newh: " << newh << std::endl;
 	std::cout << "neww: " << neww << std::endl;
 
-	// Try the way we did it before
-
-	cv::resize(image, image, cv::Size(1024, 1024));
+	cv::resize(image, image, cv::Size(neww, newh));
 
 	std::cout << "image.cols: " << image.cols << std::endl;
 	std::cout << "image.rows: " << image.rows << std::endl;

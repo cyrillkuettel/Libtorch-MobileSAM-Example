@@ -34,6 +34,12 @@ void SamPredictor::setTorchImage(torch::Tensor &inputTensor)
 	}
 	preProcess(inputTensor);
 
+	// Print the width and height of the tensor
+	int64_t height = inputTensor.size(2);
+	int64_t width = inputTensor.size(3);
+	std::cout << "Tensor input height: " << height
+		  << ", Tensor input width: " << width << std::endl;
+
 	std::vector<torch::jit::IValue> inputs{ inputTensor };
 
 	/** image_encoder (ImageEncoderViT, imageEmbeddingModel):
@@ -54,20 +60,14 @@ void SamPredictor::preProcess(torch::Tensor &inputTensor)
 	tensor_pixel_std = tensor_pixel_std.view({ 1, 3, 1, 1 });
 	inputTensor = (inputTensor - tensor_pixel_mean) / tensor_pixel_std;
 
-
 	int64_t h = inputTensor.size(2);
 	int64_t w = inputTensor.size(3);
-
 	int64_t padh = inputSize.first - h;
 	int64_t padw = inputSize.second - w;
-
-	//	int padh = img.rows - inputSize;
-	//	int padw = img.cols - inputSize;
-
 	std::cout << "padh: " << padh << std::endl;
 	std::cout << "padw: " << padw << std::endl;
 
-	torch::nn::functional::PadFuncOptions padOptions({ 0, padh, 0, padw });
+	torch::nn::functional::PadFuncOptions padOptions({ 0, padw, 0, padh });
 
 	inputTensor = torch::nn::functional::pad(inputTensor, padOptions);
 }
