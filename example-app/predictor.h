@@ -42,6 +42,7 @@ class SamPredictor {
 	}
 
 	void setImage(const cv::Mat &image);
+	void resetImage();
 
 	std::tuple<torch::Tensor, torch::Tensor, torch::Tensor>
 	predict(const std::vector<float> &pointCoordsVec,
@@ -61,25 +62,13 @@ class SamPredictor {
 
 	const std::vector<float> pixel_mean = { 123.675, 116.28, 103.53 };
 	const std::vector<float> pixel_std = { 58.395, 57.12, 57.375 };
-
-	std::pair<int, int> inputSize = { 1024, 1024 };
+	const std::pair<int, int> inputSize = { 1024, 1024 };
 
 	void setTorchImage(torch::Tensor &inputTensor);
 
-	void resetImage();
+	void debugPrint(const c10::ivalue::TupleElements &outputs) const;
 };
 
-static std::vector<float>
-linearize(const std::vector<std::vector<float> > &vec_vec)
-{
-	std::vector<float> vec;
-	for (const auto &v : vec_vec) {
-		for (auto d : v) {
-			vec.push_back(d);
-		}
-	}
-	return vec;
-}
 
 #endif // SAM_PREDICTOR_H
 #endif //EXAMPLE_APP_PREDICTOR_H

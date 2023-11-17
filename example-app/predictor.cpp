@@ -81,7 +81,6 @@ SamPredictor::predict(const std::vector<float> &pointCoordsVec,
 	torch::Tensor hasMaskInput =
 		torch::tensor({ val }, torch::dtype(torch::kFloat32));
 
-	// std::vector<float> flattenedPointCoordsVec = linearize(pointCoordsVec);
 	torch::Tensor pointCoordsTensor =
 		torch::tensor(pointCoordsVec, torch::dtype(torch::kFloat32));
 
@@ -106,8 +105,16 @@ SamPredictor::predict(const std::vector<float> &pointCoordsVec,
 	auto modelOutput = predictorModel.forward(inputs2);
 	auto outputs = modelOutput.toTuple()->elements();
 
-	std::cout << "output tensors informations:" << std::endl;
+	debugPrint(outputs);
+	torch::Tensor masks = outputs[0].toTensor();
+	torch::Tensor iou_predictions = outputs[1].toTensor();
+	torch::Tensor low_res_masks = outputs[2].toTensor();
 
+	return std::make_tuple(masks, iou_predictions, low_res_masks);
+}
+void SamPredictor::debugPrint(const c10::ivalue::TupleElements &outputs) const
+{
+	std::cout << "output tensors informations:" << std::endl;
 	for (size_t i = 0; i < outputs.size(); ++i) {
 		auto tensor = outputs[i].toTensor();
 		std::string variable_name;
@@ -127,11 +134,6 @@ SamPredictor::predict(const std::vector<float> &pointCoordsVec,
 		std::cout << variable_name << ": Size = " << tensor.sizes()
 			  << ", Type = " << tensor.scalar_type() << std::endl;
 	}
-	torch::Tensor masks = outputs[0].toTensor();
-	torch::Tensor iou_predictions = outputs[1].toTensor();
-	torch::Tensor low_res_masks = outputs[2].toTensor();
-
-	return std::make_tuple(masks, iou_predictions, low_res_masks);
 }
 
 void SamPredictor::resetImage()
