@@ -10,12 +10,14 @@ The main goal of `Libtorch-MobileSAM-Example` is run traced or scripted Torchscr
 
 ## Todo
 
-- [ ] Bug: Translate input coordinates to longest side for (1024x1024)
+- [x] Bug: Translate input coordinates to longest side for (1024x1024)
 Use longest side to scale
+- we might have to translate the input Coordinates.
+- Because currently the draw point on the image does not not reflect where the mask is drawn. 
+- So will probably need to be fixed in the `drawPoints` function. 
 - 
-  (I think it's actually the output masks that have to be tranformed back)
-def postprocess_masks( needs to be implemented
-- [ ] Feature: Refactor to be object oriented: `class Sam { ... }`
+mayb we need, def postprocess_masks, not sure at this pointk
+- [x] Feature: Refactor to be object oriented: `class Sam { ... }`
 - [ ] Feature: Implement [automatic_mask_generator](https://github.com/ChaoningZhang/MobileSAM/blob/master/mobile_sam/automatic_mask_generator.py)
 
 

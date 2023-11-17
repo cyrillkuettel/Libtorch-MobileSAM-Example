@@ -4,7 +4,7 @@
 int main()
 {
 	std::string defaultImagePath =
-		"/home/cyrill/pytorch/libtorch-opencv/example-app/images/img.jpg";
+		"/home/cyrill/pytorch/libtorch-opencv/example-app/images/picture2.jpg";
 	std::string defaultMobileSamPredictor =
 		"/home/cyrill/pytorch/libtorch-opencv/example-app/models/mobilesam_predictor.pt";
 	std::string defaultVitImageEmbedding =
@@ -21,24 +21,25 @@ int main()
 	// 2 is a top-left box corner,
 	// 3 is a bottom-right box corner,
 	// and -1 is a padding point. If there is no box input,
-	// ka single padding point with label -1 and coordinates (0.0, 0.0) should be concatenated.
-	std::vector<float> pointLabels = { 1.0f, -1.0f, -1.0f, -1.0f, -1.0f };
+	// a single padding point with label -1 and coordinates (0.0, 0.0) should be concatenated.
+	std::vector<float> pointLabels = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
+	bool hasMaskInput = false;
 
-	// rest is zero
-	std::vector<float> pointCoords = {
-		20.0f, 20.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f
-	};
+	//std::vector<float> pointCoords = { 310.0f, 180.0f, 310.0f, 180.0f, 310.0f, 180.0f, 310.0f, 180.0f, 310.0f, 180.0f };
+
+	// point coords for picture2.jpg
+	std::vector<float> pointCoords = { 371.0f, 190.0f, 374.0f, 190.0f, 365.0f, 190.0f, 371.0f, 190.0f, 371.0f, 190.0f };
 
 	cv::Mat jpg = cv::imread(defaultImagePath, cv::IMREAD_COLOR);
 
 	predictor.setImage(jpg);
 
 	torch::Tensor masks, IOUPredictions, lowResMasks;
-	std::tie(masks, IOUPredictions, lowResMasks) =
-		predictor.predict(pointCoords, pointLabels, maskInput, false);
+	std::tie(masks, IOUPredictions, lowResMasks) = predictor.predict(
+		pointCoords, pointLabels, maskInput, hasMaskInput);
 
-	torch::Tensor pointCoordsTensor = torch::tensor(
-		pointCoords, torch::dtype(torch::kFloat32));
+	torch::Tensor pointCoordsTensor =
+		torch::tensor(pointCoords, torch::dtype(torch::kFloat32));
 
 	torch::Tensor pointLabelsTensor =
 		torch::tensor(pointLabels, torch::dtype(torch::kFloat32));
@@ -46,5 +47,5 @@ int main()
 	pointCoordsTensor =
 		pointCoordsTensor.reshape({ 1, 5, 2 }).to(torch::kFloat32);
 
-	visualizeResults(jpg, masks, IOUPredictions, pointCoordsTensor );
+	visualizeResults(jpg, masks, IOUPredictions, pointCoordsTensor);
 }
