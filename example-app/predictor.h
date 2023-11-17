@@ -30,7 +30,7 @@ class SamPredictor {
     public:
 	SamPredictor(int target_length, const std::string &predictor_model_path,
 		     const std::string &image_embedding_model_path)
-		: resizeLongestSide(target_length)
+		: transform(target_length)
 		, isImageSet(false)
 		, originalImageWidth(0)
 		, originalImageHeight(0)
@@ -45,18 +45,18 @@ class SamPredictor {
 	void resetImage();
 
 	std::tuple<torch::Tensor, torch::Tensor, torch::Tensor>
-	predict(const std::vector<float> &pointCoordsVec,
-		const std::vector<float> &pointLabelsVec,
+	predict(const torch::Tensor &pointCoordsVec,
+		const torch::Tensor &pointLabelsVec,
 		const torch::Tensor &maskInput, bool maskInputBool);
+	int originalImageWidth;
+	int originalImageHeight;
+	ResizeLongestSide transform;
 
     private:
 	torch::jit::script::Module predictorModel;
 	torch::jit::script::Module imageEmbeddingModel;
-	ResizeLongestSide resizeLongestSide;
 	torch::Tensor features;
 	bool isImageSet;
-	int originalImageWidth;
-	int originalImageHeight;
 
 	void preProcess(torch::Tensor &inputTensor);
 
@@ -68,7 +68,6 @@ class SamPredictor {
 
 	void debugPrint(const c10::ivalue::TupleElements &outputs) const;
 };
-
 
 #endif // SAM_PREDICTOR_H
 #endif //EXAMPLE_APP_PREDICTOR_H

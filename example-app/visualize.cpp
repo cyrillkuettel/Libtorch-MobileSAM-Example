@@ -1,13 +1,9 @@
 #include <iostream>
 #include <memory>
-#include <vector>
 #include <stdexcept>
 #include <string>
 #include <sstream>
 #include <cstdlib>
-
-//#include <opencv2/core/core.hpp>
-//#include <opencv2/opencv.hpp>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -29,28 +25,28 @@ cv::Mat tensorToMat(torch::Tensor tensor)
 	return mat.clone(); // Clone to safely detach from the tensor data
 }
 
-void showMask(const torch::Tensor &mask, cv::Mat &img)
+void showMask(const torch::Tensor &mask, cv::Mat &image)
 {
 	if (mask.numel() == 0) {
 		throw std::runtime_error("Empty mask tensor.");
 	}
 
+	cv::Scalar color = cv::Scalar(30, 144, 255); // BGR color
+	double alpha = 0.3; // Transparency factor
+
 	cv::Mat maskMat = tensorToMat(mask);
-	cv::Mat segm;
-	cv::cvtColor(maskMat, segm, cv::COLOR_GRAY2BGR);
+	cv::Mat coloredMask;
+	cv::cvtColor(maskMat, coloredMask, cv::COLOR_GRAY2BGR);
 
-	cv::Mat binaryMask;
-	cv::cvtColor(segm, binaryMask, cv::COLOR_BGR2GRAY);
-	cv::threshold(binaryMask, binaryMask, 0, 255, cv::THRESH_BINARY);
+	std::vector<cv::Mat> channels(3);
+	cv::split(coloredMask, channels);
+	channels[0] *= color[0];
+	channels[1] *= color[1];
+	channels[2] *= color[2];
+	cv::merge(channels, coloredMask);
 
-
-	cv::Mat res;
-	cv::bitwise_and(img, img, res, binaryMask);
-
-	cv::add(res, segm, res);
-
-	cv::addWeighted(img, 0.5, res, 0.5, 0.0, img);
-
+	// Overlay the colored mask on the image
+	cv::addWeighted(image, 1.0 - alpha, coloredMask, alpha, 0.0, image);
 }
 
 void showPoints(const torch::Tensor &coords, cv::Mat &image, int markerSize = 6)

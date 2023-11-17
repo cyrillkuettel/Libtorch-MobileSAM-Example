@@ -16,7 +16,7 @@ void SamPredictor::setImage(const cv::Mat &image)
 	// because the image, once loaded and potentially color-converted,
 	// is already in the CV_8UC3 format. But it pays to be paranoid...
 	img.convertTo(img, CV_8UC3);
-	resizeLongestSide.apply_image(img);
+	transform.applyImage(img);
 
 	auto inputTensor = torch::from_blob(img.data, { img.rows, img.cols, 3 },
 					    torch::kByte);
@@ -73,24 +73,12 @@ void SamPredictor::preProcess(torch::Tensor &inputTensor)
 }
 
 std::tuple<torch::Tensor, torch::Tensor, torch::Tensor>
-SamPredictor::predict(const std::vector<float> &pointCoordsVec,
-		      const std::vector<float> &pointLabelsVec,
-		      const torch::Tensor &maskInput, bool maskInputBool)
-{
+SamPredictor::predict(const torch::Tensor &pointCoordsTensor, const torch::Tensor &pointLabelsTensor, const torch::Tensor &maskInput, bool maskInputBool) {
 	int val = maskInputBool ? 1 : 0;
 	torch::Tensor hasMaskInput =
 		torch::tensor({ val }, torch::dtype(torch::kFloat32));
 
-	torch::Tensor pointCoordsTensor =
-		torch::tensor(pointCoordsVec, torch::dtype(torch::kFloat32));
 
-	torch::Tensor pointLabelsTensor =
-		torch::tensor(pointLabelsVec, torch::dtype(torch::kFloat32));
-
-	pointCoordsTensor =
-		pointCoordsTensor.reshape({ 1, 5, 2 }).to(torch::kFloat32);
-	pointLabelsTensor =
-		pointLabelsTensor.reshape({ 1, 5 }).to(torch::kFloat32);
 
 	//btw. why is the tensor size [1500, 2250]?
 	torch::Tensor origImgSize =
