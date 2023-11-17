@@ -9,8 +9,8 @@ void SamPredictor::setImage(const cv::Mat &image)
 	cv::Mat img;
 	cv::cvtColor(image.clone(), img, cv::COLOR_BGR2RGB);
 
-	originalImageHeight = img.cols;
-	originalImageWidth = img.rows;
+	originalImageHeight = img.rows;
+	originalImageWidth = img.cols;
 
 	// img_converted.convertTo(img, CV_8UC3) seems redundant in this context
 	// because the image, once loaded and potentially color-converted,
@@ -67,7 +67,7 @@ void SamPredictor::preProcess(torch::Tensor &inputTensor)
 	std::cout << "padh: " << padh << std::endl;
 	std::cout << "padw: " << padw << std::endl;
 
-	torch::nn::functional::PadFuncOptions padOptions({ 0, padw, 0, padh });
+	torch::nn::functional::PadFuncOptions padOptions({ 0, padh, 0, padw });
 
 	inputTensor = torch::nn::functional::pad(inputTensor, padOptions);
 }
