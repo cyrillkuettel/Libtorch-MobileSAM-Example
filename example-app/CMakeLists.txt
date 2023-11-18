@@ -5,12 +5,10 @@ find_package(Torch REQUIRED)
 FIND_PACKAGE( OpenCV REQUIRED COMPONENTS core imgproc highgui)
 INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
 
-# Check if the compiler is GCC
-if (CMAKE_COMPILER_IS_GNUCXX)
-    set(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
-endif()
 
+# profiling
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
 
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 

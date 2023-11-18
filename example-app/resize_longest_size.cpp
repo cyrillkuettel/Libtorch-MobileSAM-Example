@@ -46,9 +46,6 @@ std::vector<std::pair<float, float> > ResizeLongestSide::applyCoords(
          * dimensions of the image (as a pair of ints). Each coordinate is scaled according to
          * the transformation applied to the image when resizing its longest side to the target length.
          *
-         * @param coords A vector of pairs representing the coordinates to be transformed.
-         * @param original_size A pair representing the original width and height of the image.
-         * @return A vector of pairs with transformed coordinates.
          */
 
 	int old_h = original_size.first;

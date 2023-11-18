@@ -73,12 +73,13 @@ void SamPredictor::preProcess(torch::Tensor &inputTensor)
 }
 
 std::tuple<torch::Tensor, torch::Tensor, torch::Tensor>
-SamPredictor::predict(const torch::Tensor &pointCoordsTensor, const torch::Tensor &pointLabelsTensor, const torch::Tensor &maskInput, bool maskInputBool) {
+SamPredictor::predict(const torch::Tensor &pointCoordsTensor,
+		      const torch::Tensor &pointLabelsTensor,
+		      const torch::Tensor &maskInput, bool maskInputBool)
+{
 	int val = maskInputBool ? 1 : 0;
 	torch::Tensor hasMaskInput =
 		torch::tensor({ val }, torch::dtype(torch::kFloat32));
-
-
 
 	//btw. why is the tensor size [1500, 2250]?
 	torch::Tensor origImgSize =

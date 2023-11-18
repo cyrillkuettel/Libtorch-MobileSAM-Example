@@ -27,6 +27,7 @@ cv::Mat tensorToMat(torch::Tensor tensor)
 
 void showMask(const torch::Tensor &mask, cv::Mat &image)
 {
+	auto start = std::chrono::high_resolution_clock::now();
 	cv::Scalar color = cv::Scalar(0, 127, 0); // BGR color
 
 	cv::Mat maskMat = tensorToMat(mask);
@@ -50,8 +51,15 @@ void showMask(const torch::Tensor &mask, cv::Mat &image)
 			}
 		}
 	}
+
+	auto stop = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+		stop - start);
+	std::cout << "showMask duration: " << duration.count() << "ms\n";
 }
 
+
+// todo: write function to show box and points that is not buggy
 void showPoints(const torch::Tensor &coords, cv::Mat &image, int markerSize = 6)
 {
 	if (coords.sizes().size() != 3 || coords.size(1) != 5 ||
@@ -75,21 +83,28 @@ void visualizeResults(cv::Mat &image, const torch::Tensor &masks,
 		      const torch::Tensor &scores,
 		      const torch::Tensor &pointCoords)
 {
-	std::cout << "Visualizing " << masks.size(0) << " masks.\n";
-
 	// Loop through each mask
 	for (int i = 0; i < masks.size(0); i++) {
+
 		cv::Mat displayImage = image.clone();
 		showMask(masks[i], displayImage);
-		showPoints(pointCoords, displayImage);
 		// Show box if needed
 
-		std::time_t t = std::time(nullptr);
-		std::tm tm = *std::localtime(&t);
-		std::ostringstream oss;
-		oss << std::put_time(&tm, "%Y%m%d_%H%M%S");
-		std::string timestamp = oss.str();
+		auto now = std::chrono::system_clock::now();
+		auto now_c = std::chrono::system_clock::to_time_t(now);
+		auto milliseconds =
+			std::chrono::duration_cast<std::chrono::milliseconds>(
+				now.time_since_epoch()) %
+			1000;
 
+		std::tm tm = *std::localtime(&now_c);
+
+		std::ostringstream oss;
+		oss << std::put_time(&tm, "%Y%m%d_%H%M%S") << '_'
+		    << std::setfill('0') << std::setw(3)
+		    << milliseconds.count();
+
+		std::string timestamp = oss.str();
 		std::string filename = "MobileSAM" + std::to_string(i + 1) +
 				       "_" + timestamp + ".png";
 
@@ -114,6 +129,7 @@ void visualizeResults(cv::Mat &image, const torch::Tensor &masks,
 				   ", Score: " +
 				   std::to_string(scores[i].item<float>()),
 			   displayImage);
+
 		cv::waitKey(0); // Wait for a key press
 	}
 }

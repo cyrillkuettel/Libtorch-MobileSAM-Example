@@ -1,25 +1,32 @@
 #include "predictor.h"
+#include <chrono>
 #include "visualize.cpp"
+
 struct AppConfig {
-    std::vector<std::pair<float, float>> points;
-    std::vector<float> pointLabels;
-    std::string defaultImagePath;
+	std::vector<std::pair<float, float> > points;
+	std::vector<float> pointLabels;
+	std::string defaultImagePath;
 };
 
 const AppConfig exampleInputPackage = {
-    {
-        { 228.0f, 102.0f },
-        { 325.0f, 261.0f }
-    },
-    {
-        2.0f, 3.0f
-    },
-    "/home/cyrill/pytorch/libtorch-opencv/example-app/images/img.jpg"
+	{ { 228.0f, 102.0f }, { 325.0f, 261.0f } },
+	{ 2.0f, 3.0f },
+	"/home/cyrill/pytorch/libtorch-opencv/example-app/images/img.jpg",
+};
+
+const AppConfig exampleInputPackage2 = {
+	{
+		{ 384.0f, 229.0f },
+	},
+	{ 1.0f },
+	"/home/cyrill/pytorch/libtorch-opencv/example-app/images/picture2.jpg",
 };
 
 int main()
 {
-	std::string defaultImagePath = exampleInputPackage.defaultImagePath;
+	const AppConfig config = exampleInputPackage2;
+
+	std::string defaultImagePath = config.defaultImagePath;
 
 	std::string defaultMobileSamPredictor =
 		"/home/cyrill/pytorch/libtorch-opencv/example-app/models/mobilesam_predictor.pt";
@@ -28,17 +35,13 @@ int main()
 
 	SamPredictor predictor(1024, defaultMobileSamPredictor,
 			       defaultVitImageEmbedding);
-	auto maskInput =
+	torch::Tensor maskInput =
 		torch::zeros({ 1, 1, 256, 256 }, torch::dtype(torch::kFloat32));
-
-	// point coords for picture2.jpg
-	// std::vector<float> pointCoords = { 371.0f, 190.0f, 374.0f, 190.0f, 365.0f, 190.0f, 371.0f, 190.0f, 371.0f, 190.0f };
 
 	cv::Mat jpg = cv::imread(defaultImagePath, cv::IMREAD_COLOR);
 
 	if (jpg.channels() != 3) {
-		std::cerr << "Input is not a 3-channel image"
-			  << std::endl;
+		std::cerr << "Input is not a 3-channel image" << std::endl;
 		return 1;
 	}
 	predictor.setImage(jpg);
@@ -50,15 +53,13 @@ int main()
 	// 3 is a bottom-right box corner,
 	// and -1 is a padding point. If there is no box input,
 	// a single padding point with label -1 and coordinates (0.0, 0.0) should be concatenated.
-	std::vector<float> pointLabels = exampleInputPackage.pointLabels;
+	std::vector<float> pointLabels = config.pointLabels;
 
 	while (pointLabels.size() < 5) {
 		pointLabels.emplace_back(-1.0f);
 	}
-	bool hasMaskInput = false;
 
-	std::vector<std::pair<float, float> > points =
-		exampleInputPackage.points;
+	std::vector<std::pair<float, float> > points = config.points;
 
 	while (points.size() < 5) {
 		points.emplace_back(0.0f, 0.0f);
@@ -86,14 +87,20 @@ int main()
 		pointCoordsTensor.reshape({ 1, 5, 2 }).to(torch::kFloat32);
 	pointLabelsTensor =
 		pointLabelsTensor.reshape({ 1, 5 }).to(torch::kFloat32);
-
+	bool hasMaskInput = false;
 	/***
 	 * run inference
 	 */
-
+	auto start = std::chrono::high_resolution_clock::now();
 	torch::Tensor masks, IOUPredictions, lowResMasks;
 	std::tie(masks, IOUPredictions, lowResMasks) = predictor.predict(
 		pointCoordsTensor, pointLabelsTensor, maskInput, hasMaskInput);
+	// Stop timing after the first function call
+	auto stop = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+		stop - start);
+	std::cout << "predictor.predict duration: " << duration.count()
+		  << "ms\n";
 
 	visualizeResults(jpg, masks, IOUPredictions, pointCoordsTensor);
 }
