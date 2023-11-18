@@ -1,10 +1,26 @@
 #include "predictor.h"
 #include "visualize.cpp"
+struct AppConfig {
+    std::vector<std::pair<float, float>> points;
+    std::vector<float> pointLabels;
+    std::string defaultImagePath;
+};
+
+const AppConfig exampleInputPackage = {
+    {
+        { 228.0f, 102.0f },
+        { 325.0f, 261.0f }
+    },
+    {
+        2.0f, 3.0f
+    },
+    "/home/cyrill/pytorch/libtorch-opencv/example-app/images/img.jpg"
+};
 
 int main()
 {
-	std::string defaultImagePath =
-		"/home/cyrill/pytorch/libtorch-opencv/example-app/images/img.jpg";
+	std::string defaultImagePath = exampleInputPackage.defaultImagePath;
+
 	std::string defaultMobileSamPredictor =
 		"/home/cyrill/pytorch/libtorch-opencv/example-app/models/mobilesam_predictor.pt";
 	std::string defaultVitImageEmbedding =
@@ -20,6 +36,11 @@ int main()
 
 	cv::Mat jpg = cv::imread(defaultImagePath, cv::IMREAD_COLOR);
 
+	if (jpg.channels() != 3) {
+		std::cerr << "Input is not a 3-channel image"
+			  << std::endl;
+		return 1;
+	}
 	predictor.setImage(jpg);
 
 	// `pointLabels`: Labels for the sparse input prompts.
@@ -29,20 +50,16 @@ int main()
 	// 3 is a bottom-right box corner,
 	// and -1 is a padding point. If there is no box input,
 	// a single padding point with label -1 and coordinates (0.0, 0.0) should be concatenated.
-	std::vector<float> pointLabels = {
-		2.0f, 3.0f,
-	};
+	std::vector<float> pointLabels = exampleInputPackage.pointLabels;
 
 	while (pointLabels.size() < 5) {
 		pointLabels.emplace_back(-1.0f);
 	}
 	bool hasMaskInput = false;
 
-	// Define 5 points manually
-	std::vector<std::pair<float, float> > points = {
-		{ 59.0f, 260.0f },
-		{ 191.0f, 443.0f },
-	};
+	std::vector<std::pair<float, float> > points =
+		exampleInputPackage.points;
+
 	while (points.size() < 5) {
 		points.emplace_back(0.0f, 0.0f);
 	}

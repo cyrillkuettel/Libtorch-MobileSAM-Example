@@ -27,26 +27,23 @@ cv::Mat tensorToMat(torch::Tensor tensor)
 
 void showMask(const torch::Tensor &mask, cv::Mat &image)
 {
-	if (mask.numel() == 0) {
-		throw std::runtime_error("Empty mask tensor.");
-	}
-
-	cv::Scalar color = cv::Scalar(30, 144, 255); // BGR color
-	double alpha = 0.3; // Transparency factor
-
+	// Print the type of the tensor
+	cv::Scalar color = cv::Scalar(255, 255, 255); // BGR color
+	// Convert the mask tensor to a binary mask
 	cv::Mat maskMat = tensorToMat(mask);
-	cv::Mat coloredMask;
-	cv::cvtColor(maskMat, coloredMask, cv::COLOR_GRAY2BGR);
+	// save mat
 
-	std::vector<cv::Mat> channels(3);
-	cv::split(coloredMask, channels);
-	channels[0] *= color[0];
-	channels[1] *= color[1];
-	channels[2] *= color[2];
-	cv::merge(channels, coloredMask);
+	double alpha = 0.5; // Transparency factor
 
-	// Overlay the colored mask on the image
-	cv::addWeighted(image, 1.0 - alpha, coloredMask, alpha, 0.0, image);
+	// Ensure the mask is a binary image
+	cv::threshold(maskMat, maskMat, 127, 255, cv::THRESH_BINARY);
+
+	// Create a colored mask
+	cv::Mat coloredMask = cv::Mat::zeros(image.size(), image.type());
+	coloredMask.setTo(color, maskMat);
+
+	// Overlay the mask on the image
+	cv::addWeighted(coloredMask, alpha, image, 1.0 - alpha, 0.0, image);
 }
 
 void showPoints(const torch::Tensor &coords, cv::Mat &image, int markerSize = 6)
@@ -88,9 +85,13 @@ void visualizeResults(cv::Mat &image, const torch::Tensor &masks,
 		std::string timestamp = oss.str();
 
 		std::string filename = "MobileSAM" + std::to_string(i + 1) +
-				       "_" + timestamp + ".jpg";
+				       "_" + timestamp + ".png";
 
-		cv::imwrite(filename, displayImage);
+		// Save output to png
+		std::vector<int> compressionParams;
+		compressionParams.push_back(cv::IMWRITE_PNG_COMPRESSION);
+		compressionParams.push_back(0);
+		cv::imwrite(filename, displayImage, compressionParams);
 
 		char actualpath[PATH_MAX + 1];
 		char *ptr;
