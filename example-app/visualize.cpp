@@ -27,23 +27,29 @@ cv::Mat tensorToMat(torch::Tensor tensor)
 
 void showMask(const torch::Tensor &mask, cv::Mat &image)
 {
-	// Print the type of the tensor
-	cv::Scalar color = cv::Scalar(255, 255, 255); // BGR color
-	// Convert the mask tensor to a binary mask
+	cv::Scalar color = cv::Scalar(0, 127, 0); // BGR color
+
 	cv::Mat maskMat = tensorToMat(mask);
-	// save mat
 
-	double alpha = 0.5; // Transparency factor
+	double alpha = 0.8; // Transparency factor
 
-	// Ensure the mask is a binary image
-	cv::threshold(maskMat, maskMat, 127, 255, cv::THRESH_BINARY);
+	cv::threshold(maskMat, maskMat, 127, 255, cv::THRESH_BINARY_INV);
 
-	// Create a colored mask
-	cv::Mat coloredMask = cv::Mat::zeros(image.size(), image.type());
-	coloredMask.setTo(color, maskMat);
-
-	// Overlay the mask on the image
-	cv::addWeighted(coloredMask, alpha, image, 1.0 - alpha, 0.0, image);
+	// Apply color only to the masked areas
+	for (int y = 0; y < image.rows; y++) {
+		for (int x = 0; x < image.cols; x++) {
+			if (maskMat.at<uchar>(y, x)) {
+				for (int c = 0; c < 3; c++) {
+					image.at<cv::Vec3b>(y, x)
+						[c] = static_cast<uchar>(
+						alpha * color[c] +
+						(1 - alpha) *
+							image.at<cv::Vec3b>(
+								y, x)[c]);
+				}
+			}
+		}
+	}
 }
 
 void showPoints(const torch::Tensor &coords, cv::Mat &image, int markerSize = 6)
