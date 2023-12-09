@@ -70,7 +70,7 @@ void showMask(const torch::Tensor& mask, cv::Mat& image) {
 
         double alpha = 0.8;  // Transparency factor
 
-        cv::threshold(maskMat, maskMat, 127, 255, cv::THRESH_BINARY_INV);
+        cv::threshold(maskMat, maskMat, 180, 255, cv::THRESH_BINARY_INV);
 
         printMatType(maskMat);
 

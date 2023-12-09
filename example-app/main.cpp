@@ -51,7 +51,7 @@ const AppConfig wald = {
     "/Users/cyrill/Desktop/wald.jpg",
 };
 
-const AppConfig mate = {
+const AppConfig mateY = {
     {
         {},
     },
@@ -60,10 +60,25 @@ const AppConfig mate = {
     true,
 };
 
+const AppConfig waldY = {
+    {
+        {},
+    },
+    {2.0f, 3.0f},  // top left, bottom right
+    "/Users/cyrill/Desktop/wald.jpg",
+    true,
+};
+
+const AppConfig exampleInputPackageY = {
+    {},
+    {2.0f, 3.0f},  // top left, bottom right
+    "/Users/cyrill/Libtorch-MobileSAM-Example/example-app/images/img.jpg",
+    true,
+};
 
 int main() {
         // Set input package here
-        const AppConfig config = mate;
+        const AppConfig config = exampleInputPackageY;
 
         std::string defaultImagePath = config.defaultImagePath;
 
@@ -98,7 +113,13 @@ int main() {
         // 3 is a bottom-right box corner,
         // and -1 is a padding point. If there is no box input,
         // a single padding point with label -1 and coordinates (0.0, 0.0) should be concatenated.
-        std::vector<float> pointLabels = config.pointLabels;
+        std::vector<float> pointLabels;
+
+        if (!config.useYoloBoxes) {
+                pointLabels = config.pointLabels;
+        } else {
+                pointLabels = {2.0f, 3.0f};
+        }
         while (pointLabels.size() < 5) {
                 pointLabels.emplace_back(-1.0f);
         }

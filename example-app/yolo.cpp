@@ -33,26 +33,35 @@ void getBestBoxes(float *outputTensorFloatArray, int32_t inputWidth, int32_t inp
                   std::vector<std::pair<float, float>>& points)
 {
         float probThreshold = 0.3f;
-        float imgScaleX = static_cast<float>(imageWidth) / inputWidth;
-        float imgScaleY = static_cast<float>(imageHeight) / inputHeight;
+
+        float imgScaleX = (float)imageWidth / inputWidth;
+        float imgScaleY = (float)imageHeight / inputHeight;
+        float ivScaleX = 1.0f;
+        float ivScaleY = 1.0f;
 
         std::vector<std::pair<float, std::pair<float, float>>> objectsWithScores;
 
         for (int i = 0; i < outputRows; i++) {
                 float score = outputTensorFloatArray[i * outputColumns + 4];
                 if (score > probThreshold) {
-                        float xCenter = outputTensorFloatArray[i * outputColumns];
-                        float yCenter = outputTensorFloatArray[i * outputColumns + 1];
-                        float width = outputTensorFloatArray[i * outputColumns + 2];
-                        float height = outputTensorFloatArray[i * outputColumns + 3];
 
-                        float topLeftX = imgScaleX * (xCenter - width / 2);
-                        float topLeftY = imgScaleY * (yCenter - height / 2);
-                        float bottomRightX = topLeftX + imgScaleX * width;
-                        float bottomRightY = topLeftY + imgScaleY * height;
+                        float x = outputTensorFloatArray[i * outputColumns];
+                        float y = outputTensorFloatArray[i * outputColumns + 1];
+                        float w = outputTensorFloatArray[i * outputColumns + 2];
+                        float h = outputTensorFloatArray[i * outputColumns + 3];
 
-                        objectsWithScores.push_back({score, {topLeftX, topLeftY}});
-                        objectsWithScores.push_back({score, {bottomRightX, bottomRightY}});
+                        float left = imgScaleX * (x - w / 2);
+                        float top = imgScaleY * (y - h / 2);
+                        float right = imgScaleX * (x + w / 2);
+                        float bottom = imgScaleY * (y + h / 2);
+
+                        float rectLeft = ivScaleX * left;
+                        float rectTop = top * ivScaleY;
+                        float rectRight = ivScaleX * right;
+                        float rectBottom = ivScaleY * bottom;
+
+                        objectsWithScores.push_back({score, {rectLeft, rectTop}});
+                        objectsWithScores.push_back({score, {rectRight, rectBottom}});
                 }
         }
 
@@ -64,19 +73,17 @@ void getBestBoxes(float *outputTensorFloatArray, int32_t inputWidth, int32_t inp
                 assert(objectsWithScores[i].first <= objectsWithScores[i - 1].first);
         }
 
-        for (int i = 0; i < 5 && i < objectsWithScores.size(); ++i) {
+        // limit to 1 point for now
+        for (int i = 0; i < 2 && i < objectsWithScores.size(); ++i) {
                 points.push_back(objectsWithScores[i].second);
         }
-        // Print out the boxes
-
-        std::cout << "Points that are part of the top 5 points" << std::endl;
+        std::cout << "Points that have been selected" << std::endl;
         for (const auto& point : points) {
-
-                std::cout << "Point: (" << point.first << ", " << point.second << ")\n";
+                std::cout << "Point: (x:" << point.first << ", y:" << point.second << ")\n";
         }
 }
 
-void runYolo(cv::Mat& inputImage, std::vector<std::pair<float, float> >  points) {
+void runYolo(cv::Mat& inputImage, std::vector<std::pair<float, float>>&  points) {
         int32_t originalImageWidth = inputImage.rows;
         int32_t originalImageHeight = inputImage.cols;
 
