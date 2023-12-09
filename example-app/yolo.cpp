@@ -73,7 +73,7 @@ void getBestBoxes(float *outputTensorFloatArray, int32_t inputWidth, int32_t inp
         // More is not possible, this is a limitation of the SamOnnxModel
         // on which TorchScripted mobilesam_predictor.pt is based on.
         // You might be able to use more points with the full model.
-        for (int i = 0; i < 4 && i < objectsWithScores.size(); ++i) {
+        for (int i = 0; i < 2 && i < objectsWithScores.size(); ++i) {
                 points.push_back(objectsWithScores[i].second);
         }
         std::cout << "Points that have been selected" << std::endl;

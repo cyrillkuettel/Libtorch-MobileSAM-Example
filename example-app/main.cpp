@@ -89,9 +89,16 @@ const AppConfig exampleInputPackageY = {
     true,
 };
 
+const AppConfig elephantsY = {
+    {},
+    {},  // top left, bottom right
+    "/Users/cyrill/Libtorch-MobileSAM-Example/example-app/images/elephants.jpg",
+    true,
+};
+
 int main() {
         // Set input package here
-        const AppConfig config = iosTestY;
+        const AppConfig config = elephantsY;
         validateAppConfig(config);
 
         std::string defaultImagePath = config.defaultImagePath;
