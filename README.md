@@ -2,7 +2,11 @@
 
 A minimal example of how to use Libtorch with [MobileSAM](https://github.com/ChaoningZhang/MobileSAM) and OpenCV in the same project.
 
-[Screencast from 13.11.2023 03:25:12.webm](https://github.com/cyrillkuettel/Libtorch-MobileSAM-Example/assets/36520284/f5311c46-644f-45a7-adf3-a60bc853f4a9)
+
+
+https://github.com/cyrillkuettel/Libtorch-MobileSAM-Example/assets/36520284/73cbf5ce-e58a-45d5-ba36-9a78307ecb6a
+
+
 
 ## Description
 
