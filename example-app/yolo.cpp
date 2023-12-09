@@ -68,19 +68,19 @@ void getBestBoxes(float *outputTensorFloatArray, int32_t inputWidth, int32_t inp
         std::sort(objectsWithScores.begin(), objectsWithScores.end(),
                   [](const auto& a, const auto& b) { return a.first > b.first; });
 
-        // Be extra paranoid, always a good idea:
-        for (size_t i = 1; i < objectsWithScores.size(); ++i) {
-                assert(objectsWithScores[i].first <= objectsWithScores[i - 1].first);
-        }
 
-        // limit to 1 point for now
-        for (int i = 0; i < 2 && i < objectsWithScores.size(); ++i) {
+        // limit points. 4 points means 2 boxes.
+        // More is not possible, this is a limitation of the SamOnnxModel
+        // on which TorchScripted mobilesam_predictor.pt is based on.
+        // You might be able to use more points with the full model.
+        for (int i = 0; i < 4 && i < objectsWithScores.size(); ++i) {
                 points.push_back(objectsWithScores[i].second);
         }
         std::cout << "Points that have been selected" << std::endl;
         for (const auto& point : points) {
                 std::cout << "Point: (x:" << point.first << ", y:" << point.second << ")\n";
         }
+        assert(points.size() == 4 || points.size() == 2);
 }
 
 void runYolo(cv::Mat& inputImage, std::vector<std::pair<float, float>>&  points) {

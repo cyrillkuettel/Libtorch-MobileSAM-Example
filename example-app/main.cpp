@@ -78,7 +78,7 @@ const AppConfig exampleInputPackageY = {
 
 int main() {
         // Set input package here
-        const AppConfig config = exampleInputPackageY;
+        const AppConfig config = mateY;
 
         std::string defaultImagePath = config.defaultImagePath;
 
@@ -106,6 +106,14 @@ int main() {
         }
         predictor.setImage(jpg);
 
+        std::vector<std::pair<float, float> > points;
+        if (config.useYoloBoxes) {
+                std::cout << "Using Yolo Boxes" << std::endl;
+                runYolo(jpg, points); // writes into the points
+        } else {
+                points = config.points;
+        }
+
         // `pointLabels`: Labels for the sparse input prompts.
         // 0 is a negative input point,
         // 1 is a positive input point,
@@ -118,21 +126,23 @@ int main() {
         if (!config.useYoloBoxes) {
                 pointLabels = config.pointLabels;
         } else {
-                pointLabels = {2.0f, 3.0f};
+                if (points.size() == 4) {
+                        pointLabels = {2.0f, 3.0f, 2.0f, 3.0f};
+                } else if (points.size() == 2) {
+                        pointLabels = {2.0f, 3.0f};
+                } else {
+                        std::cerr << "Invalid number of points" << std::endl;
+                        return 1;
+                }
         }
+
+        // pad
+        assert(!pointLabels.empty());
         while (pointLabels.size() < 5) {
                 pointLabels.emplace_back(-1.0f);
         }
 
-        std::vector<std::pair<float, float> > points;
-        if (config.useYoloBoxes) {
-                std::cout << "Using Yolo Boxes" << std::endl;
-                runYolo(jpg, points); // writes into the points
-        } else {
-                points = config.points;
-        }
-
-
+        assert(!points.empty());
         while (points.size() < 5) {
                 points.emplace_back(0.0f, 0.0f);
         }
@@ -147,10 +157,13 @@ int main() {
                 flatTransformedCoords.push_back(coord.first);
                 flatTransformedCoords.push_back(coord.second);
         }
+
+        std::cout << flatTransformedCoords << std::endl;
         assert(flatTransformedCoords.size() == 10);
         assert(pointLabels.size() == 5);
 
         std::cout << "pointLabels.size(): " << pointLabels.size() << std::endl;
+        std::cout << pointLabels << std::endl;
 
         torch::Tensor pointCoordsTensor =
             torch::tensor(flatTransformedCoords, torch::dtype(torch::kFloat32));
