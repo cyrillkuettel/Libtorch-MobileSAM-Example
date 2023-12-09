@@ -8,19 +8,18 @@
 #ifndef SAM_PREDICTOR_H
 #define SAM_PREDICTOR_H
 
-#include <iostream>
-#include <memory>
-#include <vector>
-#include <stdexcept>
-#include <string>
-#include <sstream>
-#include <cstdlib>
+//#include <memory>
+//#include <vector>
+//#include <stdexcept>
+//#include <string>
+//#include <sstream>
+//#include <cstdlib>
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgcodecs/imgcodecs.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/opencv.hpp>
+// #include <opencv2/core/core.hpp>
+// #include <opencv2/highgui/highgui.hpp>
+// #include <opencv2/imgcodecs/imgcodecs.hpp>
+// #include <opencv2/imgproc/imgproc.hpp>
+// #include <opencv2/opencv.hpp>
 
 #include <torch/script.h>
 #include <torch/torch.h>
@@ -60,9 +59,9 @@ class SamPredictor {
 
 	void preProcess(torch::Tensor &inputTensor);
 
-	const std::vector<float> pixel_mean = { 123.675, 116.28, 103.53 };
-	const std::vector<float> pixel_std = { 58.395, 57.12, 57.375 };
-	const std::pair<int, int> inputSize = { 1024, 1024 };
+	std::vector<float> pixelMean = { 123.675, 116.28, 103.53 };
+	std::vector<float> pixelStd = { 58.395, 57.12, 57.375 };
+	std::pair<int, int> inputSize = { 1024, 1024 };
 
 	void setTorchImage(torch::Tensor &inputTensor);
 

@@ -19,7 +19,9 @@ add_executable(main main.cpp
         resize_longest_size.h
         predictor.cpp
         predictor.h
-        )
+        yolo.cpp
+        yolo.h
+)
 
 target_link_libraries(main ${TORCH_LIBRARIES}; ${OpenCV_LIBS})
 
