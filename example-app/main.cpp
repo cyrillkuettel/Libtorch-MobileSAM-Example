@@ -4,12 +4,21 @@
 #include "yolo.h"
 
 struct AppConfig {
-        std::vector<std::pair<float, float>> points;
-        std::vector<float> pointLabels;
+        std::vector<std::pair<float, float>> points = {};
+        std::vector<float> pointLabels = {};
         std::string defaultImagePath;
         bool useYoloBoxes = false;
 };
-
+void validateAppConfig(const AppConfig& config) {
+    if (config.useYoloBoxes) {
+        if (!config.points.empty() || !config.pointLabels.empty()) {
+                std::cout << "AppConfig is invalid. Note that if  config.useYoloBoxes==true, "
+                             "the boxes will be calculated using the YOLOV5 object detection model.\n";
+                std::exit(EXIT_FAILURE);
+        }
+    }
+    std::cout << "AppConfig ok.\n";
+}
 const AppConfig exampleInputPackage = {
     {{228.0f, 102.0f}, {325.0f, 261.0f}},
     {2.0f, 3.0f},  // top left, bottom right
@@ -43,6 +52,14 @@ const AppConfig iosTest = {
     "/Users/cyrill/Downloads/test.jpg",
 };
 
+const AppConfig iosTestY = {
+    {
+    },
+    {},  // top left, bottom right
+    "/Users/cyrill/Downloads/test.jpg",
+        true,
+};
+
 const AppConfig wald = {
     {
         {2286.0f, 336.0f},
@@ -52,33 +69,30 @@ const AppConfig wald = {
 };
 
 const AppConfig mateY = {
-    {
-        {},
-    },
-    {2.0f, 3.0f},  // top left, bottom right
+    { },
+    {},  // top left, bottom right
     "/Users/cyrill/Documents/Test_images/mate.jpg",
     true,
 };
 
 const AppConfig waldY = {
-    {
-        {},
-    },
-    {2.0f, 3.0f},  // top left, bottom right
+    {},
+    {},  // top left, bottom right
     "/Users/cyrill/Desktop/wald.jpg",
     true,
 };
 
 const AppConfig exampleInputPackageY = {
     {},
-    {2.0f, 3.0f},  // top left, bottom right
+    {},  // top left, bottom right
     "/Users/cyrill/Libtorch-MobileSAM-Example/example-app/images/img.jpg",
     true,
 };
 
 int main() {
         // Set input package here
-        const AppConfig config = mateY;
+        const AppConfig config = iosTestY;
+        validateAppConfig(config);
 
         std::string defaultImagePath = config.defaultImagePath;
 
