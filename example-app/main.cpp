@@ -3,7 +3,7 @@
 #include "visualize.cpp"
 #include "yolo.h"
 
-bool callbackInvoked = false;
+bool mouseClicked  = false;
 static void mouseCallback(int event, int x, int y, int flags, void* userdata) {
         // Check if the left mouse button was clicked
         if (event == cv::EVENT_LBUTTONDOWN) {
@@ -15,9 +15,9 @@ static void mouseCallback(int event, int x, int y, int flags, void* userdata) {
                 std::cout << "Writing into memory points: " << points << std::endl;
                 // Optional: Print the coordinates for verification
                 std::cout << "Clicked at: " << x << ", " << y << std::endl;
-                callbackInvoked = true;
+                mouseClicked = true;
         }
-        cv::destroyWindow("Select a point"); // Close the window
+        // cv::destroyWindow("Select a point"); // Close the window
 }
 
 struct AppConfig {
@@ -46,6 +46,8 @@ std::pair<torch::Tensor, torch::Tensor> computePointsAndLabels( AppConfig& confi
                 std::cout << "Using Yolo Boxes" << std::endl;
                 runYolo(jpg, points);  // writes into the points
         } else {
+
+                std::cout << "Using config points=" << config.points << std::endl;
                 points = config.points;
         }
 
@@ -96,7 +98,8 @@ std::pair<torch::Tensor, torch::Tensor> computePointsAndLabels( AppConfig& confi
                 flatTransformedCoords.push_back(coord.first);
                 flatTransformedCoords.push_back(coord.second);
         }
-
+        //todo: this is completely wrong
+        // why are there two poitns with only one inpu point??
         std::cout << "flatTransformedCoords" << std::endl;
         std::cout << flatTransformedCoords << std::endl;
         assert(flatTransformedCoords.size() == 10);
@@ -238,7 +241,7 @@ int main() {
 
         auto clonedConfig = config;  // Clone the config struct
          // if we don't use yolo boxes, the user can interactively select the points
-        std::vector<std::pair<float, float>> points(1);
+        std::vector<std::pair<float, float>> points;
         if (!config.useYoloBoxes) {
                 cv::namedWindow("Select a point", cv::WINDOW_AUTOSIZE);
 
@@ -247,13 +250,21 @@ int main() {
                 cv::imshow("Select a point", jpg);
                 cv::setMouseCallback("Select a point", mouseCallback, &points);
 
-                // Check if the callback was invoked
-                if (callbackInvoked) {
+                // Not very elegant, but right now the only way to wait for a mouse click
+                while (true) {
+                        if (cv::waitKey(1) > 0 || mouseClicked) {
+                                break;
+                        }
+                }
+
+                // DEbug: Check if the callback was invoked
+                if (mouseClicked) {
                     std::cout << "mouseCallback was invoked." << std::endl;
                 } else {
                     std::cout << "!!!! mouseCallback was not invoked." << std::endl;
                     std::exit(EXIT_FAILURE);
                 }
+
                 assert(!points.empty());
                 clonedConfig.points = points;
         }
