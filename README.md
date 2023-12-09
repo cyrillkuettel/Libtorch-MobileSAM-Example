@@ -17,7 +17,7 @@ The main goal of `Libtorch-MobileSAM-Example` is run traced or scripted Torchscr
 
 - [x] Feature: Refactor to be object oriented
 - [x] Bug: Translate input coordinates to longest side for (1024x1024)
-- [ ] Feature: Add ability to click with mouse 
+- [x] Feature: Add ability to click with mouse 
 - [ ] Bug: Fix the `drawPoints` function. 
 - [ ] Feature: Implement [automatic_mask_generator](https://github.com/ChaoningZhang/MobileSAM/blob/master/mobile_sam/automatic_mask_generator.py)
 
