@@ -64,7 +64,7 @@ cv::Mat tensorToMat(torch::Tensor tensor) {
 
 void showMask(const torch::Tensor& mask, cv::Mat& image) {
         auto start = std::chrono::high_resolution_clock::now();
-        cv::Scalar color = cv::Scalar(0, 127, 0);  // BGR color
+        cv::Scalar color = cv::Scalar(255, 127, 0);  // BGR color
 
         cv::Mat maskMat = tensorToMat(mask);
 

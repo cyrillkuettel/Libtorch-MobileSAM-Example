@@ -3,12 +3,30 @@
 #include "visualize.cpp"
 #include "yolo.h"
 
+bool callbackInvoked = false;
+static void mouseCallback(int event, int x, int y, int flags, void* userdata) {
+        // Check if the left mouse button was clicked
+        if (event == cv::EVENT_LBUTTONDOWN) {
+
+                std::cout << "LBUTTONDOWN" << std::endl;
+                // Cast userdata to the expected type (std::vector<std::pair<float, float>>*)
+                std::vector<std::pair<float, float>>* points = reinterpret_cast<std::vector<std::pair<float, float>>*>(userdata);
+                points->emplace_back(static_cast<float>(x), static_cast<float>(y));
+                std::cout << "Writing into memory points: " << points << std::endl;
+                // Optional: Print the coordinates for verification
+                std::cout << "Clicked at: " << x << ", " << y << std::endl;
+                callbackInvoked = true;
+        }
+        cv::destroyWindow("Select a point"); // Close the window
+}
+
 struct AppConfig {
         std::vector<std::pair<float, float>> points = {};
         std::vector<float> pointLabels = {};
         std::string defaultImagePath;
         bool useYoloBoxes = false;
 };
+
 void validateAppConfig(const AppConfig& config) {
     if (config.useYoloBoxes) {
         if (!config.points.empty() || !config.pointLabels.empty()) {
@@ -19,6 +37,83 @@ void validateAppConfig(const AppConfig& config) {
     }
     std::cout << "AppConfig ok.\n";
 }
+
+
+std::pair<torch::Tensor, torch::Tensor> computePointsAndLabels( AppConfig& config,  cv::Mat& jpg,  SamPredictor& predictor) {
+
+        std::vector<std::pair<float, float>> points;
+        if (config.useYoloBoxes) {
+                std::cout << "Using Yolo Boxes" << std::endl;
+                runYolo(jpg, points);  // writes into the points
+        } else {
+                points = config.points;
+        }
+
+        // `pointLabels`: Labels for the sparse input prompts.
+        // 0 is a negative input point,
+        // 1 is a positive input point,
+        // 2 is a top-left box corner,
+        // 3 is a bottom-right box corner,
+        // and -1 is a padding point. If there is no box input,
+        // a single padding point with label -1 and coordinates (0.0, 0.0) should be concatenated.
+        std::vector<float> pointLabels;
+
+        if (!config.useYoloBoxes) {
+                if (config.pointLabels.empty()) {
+                        pointLabels = {1.0f};
+                } else {
+                        pointLabels = config.pointLabels;
+                }
+        } else {
+                if (points.size() == 4) {
+                        pointLabels = {2.0f, 3.0f, 2.0f, 3.0f};
+                } else if (points.size() == 2) {
+                        pointLabels = {2.0f, 3.0f};
+                } else {
+                        std::cerr << "Invalid number of points" << std::endl;
+                        std::exit(EXIT_FAILURE);
+                }
+        }
+
+        // pad
+        assert(!pointLabels.empty());
+        while (pointLabels.size() < 5) {
+                pointLabels.emplace_back(-1.0f);
+        }
+
+        assert(!points.empty());
+        while (points.size() < 5) {
+                points.emplace_back(0.0f, 0.0f);
+        }
+        std::vector<std::pair<float, float>> transformedCoords =
+            predictor.transform.applyCoords(
+                points,
+                {predictor.originalImageHeight, predictor.originalImageWidth});
+
+        // Convert the transformed coordinates back to a flat vector
+        std::vector<float> flatTransformedCoords;
+        for (const auto& coord : transformedCoords) {
+                flatTransformedCoords.push_back(coord.first);
+                flatTransformedCoords.push_back(coord.second);
+        }
+
+        std::cout << "flatTransformedCoords" << std::endl;
+        std::cout << flatTransformedCoords << std::endl;
+        assert(flatTransformedCoords.size() == 10);
+        assert(pointLabels.size() == 5);
+
+        std::cout << "pointLabels.size(): " << pointLabels.size() << std::endl;
+        std::cout << pointLabels << std::endl;
+
+        torch::Tensor pointCoordsTensor =
+            torch::tensor(flatTransformedCoords, torch::dtype(torch::kFloat32));
+
+        torch::Tensor pointLabelsTensor =
+            torch::tensor(pointLabels, torch::dtype(torch::kFloat32));
+
+        return std::make_pair(pointCoordsTensor, pointLabelsTensor);
+}
+
 const AppConfig exampleInputPackage = {
     {{228.0f, 102.0f}, {325.0f, 261.0f}},
     {2.0f, 3.0f},  // top left, bottom right
@@ -96,9 +191,23 @@ const AppConfig elephantsY = {
     true,
 };
 
+const AppConfig test = {
+    {},
+    {},  // top left, bottom right
+    "/Users/cyrill/Libtorch-MobileSAM-Example/example-app/images/picture2.jpg",
+    false,
+};
+
+const AppConfig test2= {
+    {{420.0f, 600.0f}},
+    {1.0f},  // top left, bottom right
+    "/Users/cyrill/Desktop/nuessli2.jpeg",
+    false,
+};
+
 int main() {
         // Set input package here
-        const AppConfig config = elephantsY;
+        const AppConfig config = test;
         validateAppConfig(config);
 
         std::string defaultImagePath = config.defaultImagePath;
@@ -127,71 +236,29 @@ int main() {
         }
         predictor.setImage(jpg);
 
-        std::vector<std::pair<float, float> > points;
-        if (config.useYoloBoxes) {
-                std::cout << "Using Yolo Boxes" << std::endl;
-                runYolo(jpg, points); // writes into the points
-        } else {
-                points = config.points;
-        }
-
-        // `pointLabels`: Labels for the sparse input prompts.
-        // 0 is a negative input point,
-        // 1 is a positive input point,
-        // 2 is a top-left box corner,
-        // 3 is a bottom-right box corner,
-        // and -1 is a padding point. If there is no box input,
-        // a single padding point with label -1 and coordinates (0.0, 0.0) should be concatenated.
-        std::vector<float> pointLabels;
-
+        auto clonedConfig = config;  // Clone the config struct
+         // if we don't use yolo boxes, the user can interactively select the points
+        std::vector<std::pair<float, float>> points(1);
         if (!config.useYoloBoxes) {
-                pointLabels = config.pointLabels;
-        } else {
-                if (points.size() == 4) {
-                        pointLabels = {2.0f, 3.0f, 2.0f, 3.0f};
-                } else if (points.size() == 2) {
-                        pointLabels = {2.0f, 3.0f};
+                cv::namedWindow("Select a point", cv::WINDOW_AUTOSIZE);
+
+                std::cout << "setting mouseCallback" << std::endl;
+                // Display the image and wait for a mouse click
+                cv::imshow("Select a point", jpg);
+                cv::setMouseCallback("Select a point", mouseCallback, &points);
+
+                // Check if the callback was invoked
+                if (callbackInvoked) {
+                    std::cout << "mouseCallback was invoked." << std::endl;
                 } else {
-                        std::cerr << "Invalid number of points" << std::endl;
-                        return 1;
+                    std::cout << "!!!! mouseCallback was not invoked." << std::endl;
+                    std::exit(EXIT_FAILURE);
                 }
+                assert(!points.empty());
+                clonedConfig.points = points;
         }
 
-        // pad
-        assert(!pointLabels.empty());
-        while (pointLabels.size() < 5) {
-                pointLabels.emplace_back(-1.0f);
-        }
-
-        assert(!points.empty());
-        while (points.size() < 5) {
-                points.emplace_back(0.0f, 0.0f);
-        }
-        std::vector<std::pair<float, float>> transformedCoords =
-            predictor.transform.applyCoords(
-                points,
-                {predictor.originalImageHeight, predictor.originalImageWidth});
-
-        // Convert the transformed coordinates back to a flat vector
-        std::vector<float> flatTransformedCoords;
-        for (const auto& coord : transformedCoords) {
-                flatTransformedCoords.push_back(coord.first);
-                flatTransformedCoords.push_back(coord.second);
-        }
-
-        std::cout << flatTransformedCoords << std::endl;
-        assert(flatTransformedCoords.size() == 10);
-        assert(pointLabels.size() == 5);
-
-        std::cout << "pointLabels.size(): " << pointLabels.size() << std::endl;
-        std::cout << pointLabels << std::endl;
-
-        torch::Tensor pointCoordsTensor =
-            torch::tensor(flatTransformedCoords, torch::dtype(torch::kFloat32));
-
-        torch::Tensor pointLabelsTensor =
-            torch::tensor(pointLabels, torch::dtype(torch::kFloat32));
-
+        auto [pointCoordsTensor, pointLabelsTensor] = computePointsAndLabels(clonedConfig, jpg, predictor);
         pointCoordsTensor =
             pointCoordsTensor.reshape({1, 5, 2}).to(torch::kFloat32);
         pointLabelsTensor =
