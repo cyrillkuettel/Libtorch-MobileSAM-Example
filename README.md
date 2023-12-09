@@ -75,26 +75,27 @@ The models are included in the repo, alternatively, you can export them with thi
 
 
 
-###  Dependencies
-#### Linux: 
+##  Dependencies
+### Linux: 
 ```console
  sudo apt install build-essential cmake git pkg-config libgtk-3-dev libavcodec-dev libavformat-dev libswscale-dev libv4l-dev  libxvidcore-dev libx264-dev libjpeg-dev libpng-dev libtiff-dev gfortran openexr libatlas-base-dev python3-dev python3-numpy  libtbb2 libtbb-dev libdc1394-22-dev
 ```
 
-#### MacOS: 
+### MacOS: 
 ```console
 brew install cmake pkg-config jpeg libpng libtiff openexr eigen tbb
 ```
-Note: You need Libtorch 1.13.0+ and and OpenCV 4.5.4+
+Note: Tested with Libtorch 1.13.0+ and OpenCV 4.5.4+
 
 (Other versions _might_ work, but have not been tested untested)
-### Libtorch 
+
+### Libtorch dependency
 The project expects `libtorch/` in the top-level directory. I have not included this because its 727MB. 
 
 #### Mac M1 Chips
 
 Pre-built binaries of pytorch for for Mac M2 can be found here [libtorch-mac-m1/releases](https://github.com/mlverse/libtorch-mac-m1/releases) (no official builds at the point of writing this.) 
-
+Rename the folder to 'libtorch' and put it in the top-level directory of the repository.
 #### Linux
 
 Just download [this version from pytorch.org](https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.13.0%2Bcpu.zip), rename the folder to 'libtorch' and put it in the repository at top level.
@@ -104,10 +105,10 @@ wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-de
 unzip libtorch-cxx11-abi-shared-with-deps-1.13.0+cpu.zip # important that it's the  `cxx11 ABI` version, works with OpenCV)
 ```
 
-### OpenCV 
+### OpenCV dependency
 Install OpenCV for your operating system. 
 #### Unix/MacOS
-
+I did it like this: 
 
 ```bash
 mkdir ~/opencv && cd ~/opencv
@@ -133,6 +134,7 @@ sudo make install
 
 
 ## Run
+### Run from command line
 
 Only first time: (Note the two dots at the end)
 ```bash
@@ -149,7 +151,13 @@ From now on, you can just type:
 make
 ```
 
+### Run from Clion 
 
+1. File -> Open -> example-app
+2. Open build settings (should open automatically): File -> Settings -> Build, Execution, Deployment -> CMake 
+3. Delete contents of Cmake options, add this: `-DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=/absolute/path/to/libtorch`
+
+![Clion_setup.png](example-app%2FClion_setup.png)
 
 ## Information on Libtorch
 For first time install troubleshooting, see the [pytorch cppdocs](https://pytorch.org/cppdocs/installing.html), which this information is based on.
