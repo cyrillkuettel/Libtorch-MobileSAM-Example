@@ -9,7 +9,9 @@ float* resizeAndNormalizeImage(cv::Mat& inputImage, int w, int h) {
         cv::Mat resizedImage;
         cv::resize(inputImage, resizedImage, cv::Size(w, h));
 
-        float* normalizedBuffer = new float[3 * h * w * sizeof(float)];
+        int bSize = 3 * h * w;
+        float* normalizedBuffer = new float[bSize];
+        std::cout << "Normalized buffer size: " << bSize << std::endl;
 
         for (int i = 0; i < (w * h); i++) {
                 cv::Vec3b pixel = resizedImage.at<cv::Vec3b>(i / w, i % w);
