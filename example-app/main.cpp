@@ -98,8 +98,6 @@ std::pair<torch::Tensor, torch::Tensor> computePointsAndLabels( AppConfig& confi
                 flatTransformedCoords.push_back(coord.first);
                 flatTransformedCoords.push_back(coord.second);
         }
-        //todo: this is completely wrong
-        // why are there two poitns with only one inpu point??
         std::cout << "flatTransformedCoords" << std::endl;
         std::cout << flatTransformedCoords << std::endl;
         assert(flatTransformedCoords.size() == 10);
@@ -251,6 +249,7 @@ int main() {
                 cv::setMouseCallback("Select a point", mouseCallback, &points);
 
                 // Not very elegant, but right now the only way to wait for a mouse click
+                // Seems that waitKey is required even if we use only a mouseCallback
                 while (true) {
                         if (cv::waitKey(1) > 0 || mouseClicked) {
                                 break;
