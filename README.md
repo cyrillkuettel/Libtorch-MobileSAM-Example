@@ -12,6 +12,7 @@ https://github.com/cyrillkuettel/Libtorch-MobileSAM-Example/assets/36520284/73cb
 ## Description
 
 The main goal of `Libtorch-MobileSAM-Example` is run traced or scripted Torchscript models. This provides the foundations for eventually running this on mobile devices (Pytorch Mobile).
+This is especially useful if you want to port a model to mobile: You can iterate much faster, because the "build and run" loop is 3 seconds, and not 2 minute like on your typical Android/iOS build system.
 
 ## Todo
 
