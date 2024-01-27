@@ -11,8 +11,8 @@ https://github.com/cyrillkuettel/Libtorch-MobileSAM-Example/assets/36520284/73cb
 
 ## Description
 
-The main goal of `Libtorch-MobileSAM-Example` is run traced or scripted Torchscript models. This provides the foundations for eventually running this on mobile devices (Pytorch Mobile).
-This is especially useful if you want to port a model to mobile: You can iterate much faster, because the "build and run" loop is 3 seconds, and not 2 minute like on your typical Android/iOS build system.
+The main goal of `Libtorch-MobileSAM-Example` is run traced or scripted TorchScript models. This provides the foundation for eventually running this on mobile devices (Pytorch Mobile).
+This is useful if you want to port a model to mobile: You can iterate much faster: The build-and-run loop is 3 seconds, and not 2 minutes like on your typical Android/iOS build system.
 
 ## Todo
 
@@ -165,6 +165,3 @@ make
 3. Delete contents of Cmake options, add this: `-DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=/absolute/path/to/libtorch`
 
 ![Clion_setup.png](example-app%2FClion_setup.png)
-
-## Information on Libtorch
-For first time install troubleshooting, see the [pytorch cppdocs](https://pytorch.org/cppdocs/installing.html), which this information is based on.
