@@ -11,7 +11,7 @@ https://github.com/cyrillkuettel/Libtorch-MobileSAM-Example/assets/36520284/73cb
 
 ## Description
 
-The main goal of `Libtorch-MobileSAM-Example` is run traced or scripted TorchScript models. This provides the foundation for eventually running this on mobile devices (Pytorch Mobile).
+The main goal of `Libtorch-MobileSAM-Example` is to run traced or scripted TorchScript models. This provides the foundation for eventually running this on mobile devices (Pytorch Mobile).
 This is useful if you want to port a model to mobile: You can iterate much faster: The build-and-run loop is 3 seconds, and not 2 minutes like on your typical Android/iOS build system.
 
 ## Todo
@@ -36,7 +36,7 @@ The models are included in the repo, alternatively, you can export them with thi
             <a href="https://github.com/cyrillkuettel/Libtorch-MobileSAM-Example/tree/master/example-app/models/">cpu_mobilesam_predictor_mobile_optimized_lite_interpreter.ptl</a>
         </li>
         <li>
-            <a href="https://github.com/cyrillkuettel/Libtorch-MobileSAM-Example/blob/master/example-app/models/cpu_vit_image_embedding_mobile_optimized_lite_interpreter.ptl">pu_vit_image_embedding_mobile_optimized_lite_interpreter.ptl</a>
+            <a href="https://github.com/cyrillkuettel/Libtorch-MobileSAM-Example/blob/master/example-app/models/cpu_vit_image_embedding_mobile_optimized_lite_interpreter.ptl">cpu_vit_image_embedding_mobile_optimized_lite_interpreter.ptl</a>
         </li>
         <li>
             <a href="https://github.com/cyrillkuettel/Libtorch-MobileSAM-Example/blob/master/example-app/models/mobilesam_predictor.pt">mobilesam_predictor.pt</a>
