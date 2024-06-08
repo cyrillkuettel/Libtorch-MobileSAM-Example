@@ -119,7 +119,7 @@ const AppConfig exampleInputPackage = {
     {{228.0f, 102.0f}, {325.0f, 261.0f}},
     {2.0f, 3.0f},  // top left, bottom right
     //"/home/cyrill/pytorch/libtorch-opencv/example-app/images/img.jpg",
-    "/Users/cyrill/Libtorch-MobileSAM-Example/example-app/images/img.jpg",
+    "/Users/cyrill/libtorch-mobileSAM-exapmle/Libtorch-MobileSAM-Example/example-app/images/img.jpg",
 };
 
 const AppConfig exampleInputPackage2 = {
@@ -181,44 +181,41 @@ const AppConfig waldY = {
 const AppConfig exampleInputPackageY = {
     {},
     {},  // top left, bottom right
-    "/Users/cyrill/Libtorch-MobileSAM-Example/example-app/images/img.jpg",
+    "/Users/cyrill/libtorch-mobileSAM-exapmle/Libtorch-MobileSAM-Example/example-app/images/img.jpg",
     true,
 };
 
 const AppConfig elephantsY = {
     {},
     {},  // top left, bottom right
-    "/Users/cyrill/Libtorch-MobileSAM-Example/example-app/images/elephants.jpg",
+    "/Users/cyrill/libtorch-mobileSAM-exapmle/Libtorch-MobileSAM-Example/example-app/images/elephants.jpg",
     true,
 };
 
 const AppConfig test = {
     {},
     {},  // top left, bottom right
-    "/Users/cyrill/Libtorch-MobileSAM-Example/example-app/images/picture2.jpg",
+    "/Users/cyrill/libtorch-mobileSAM-exapmle/Libtorch-MobileSAM-Example/example-app/images/picture2.jpg",
     false,
 };
 
 const AppConfig test2= {
-    {{420.0f, 600.0f}},
+  {{420.0f, 600.0f}},
     {1.0f},  // top left, bottom right
     "/Users/cyrill/Desktop/nuessli2.jpeg",
     false,
 };
 
+
 int main() {
-        // Set input package here
-        const AppConfig config = test;
+        // Set input here
+        const AppConfig config = elephantsY;
         validateAppConfig(config);
 
         std::string defaultImagePath = config.defaultImagePath;
-        //	std::string defaultMobileSamPredictor =
-        //		"/home/cyrill/pytorch/libtorch-opencv/example-app/models/mobilesam_predictor.pt";
-        //	std::string defaultVitImageEmbedding =
-        //		"/home/cyrill/pytorch/libtorch-opencv/example-app/models/vit_image_embedding.pt";
+        std::string defaultMobileSamPredictor = "/Users/cyrill/libtorch-mobileSAM-exapmle/Libtorch-MobileSAM-Example/example-app/models/mobilesam_predictor.pt";
+        std::string defaultVitImageEmbedding = "/Users/cyrill/libtorch-mobileSAM-exapmle/Libtorch-MobileSAM-Example/example-app/models/vit_image_embedding.pt";
 
-        std::string defaultMobileSamPredictor = "models/mobilesam_predictor.pt";
-        std::string defaultVitImageEmbedding = "models/vit_image_embedding.pt";
 
         SamPredictor predictor(1024, defaultMobileSamPredictor,
                                defaultVitImageEmbedding);
