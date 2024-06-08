@@ -70,11 +70,20 @@ void getBestBoxes(float *outputTensorFloatArray, int32_t inputWidth, int32_t inp
         std::sort(objectsWithScores.begin(), objectsWithScores.end(),
                   [](const auto& a, const auto& b) { return a.first > b.first; });
 
+        /*
+         limit points. 4 points means 2 boxes.
+         The convert_pytorch_mobile.py script hard-codes these settings,
+         as the SamOnnxModel class
+         (defined at https://github.com/cmarschner/MobileSAM/blob/f5df62fa645e8d4134a67a76444158c1727ca756/scripts/convert_pytorch_mobile.py#L22)
+         serves as an intermediary in the creation of the mobilesam_predictor.pt
+         file.
+         Deriving from this class enables the generation of the mobilesam_predictor.pt.
+         It contains all logic to run the model intrinsically.
 
-        // limit points. 4 points means 2 boxes.
-        // More is not possible, this is a limitation of the SamOnnxModel
-        // on which TorchScripted mobilesam_predictor.pt is based on.
-        // You might be able to use more points with the full model.
+         The torchscriped mobilesam_predictor.pt class encapsulates all the
+         intrinsic logic necessary to execute the model.
+        */
+
         for (int i = 0; i < 2 && i < objectsWithScores.size(); ++i) {
                 points.push_back(objectsWithScores[i].second);
         }

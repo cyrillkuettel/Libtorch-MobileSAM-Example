@@ -215,6 +215,8 @@ int main() {
             torch::zeros({1, 1, 256, 256}, torch::dtype(torch::kFloat32));
 
         cv::Mat jpg = cv::imread(defaultImagePath.string(), cv::IMREAD_COLOR);
+        std::cout << "Reading image from: " << defaultImagePath << std::endl;
+
         if (jpg.channels() != 3) {
                 std::cerr << "Input is not a 3-channel image" << std::endl;
                 return 1;

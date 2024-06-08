@@ -1,5 +1,10 @@
 #include "predictor.h"
 
+
+// The predictor:
+// https://github.com/cmarschner/MobileSAM/blob/a509aac54fdd7af59f843135f2f7cee307283c88/mobile_sam/predictor.py
+
+
 void SamPredictor::setImage(const cv::Mat& image) {
         if (image.empty()) {
                 std::cout << "imread(): failed: Image not found" << std::endl;
@@ -34,6 +39,7 @@ void SamPredictor::setImage(const cv::Mat& image) {
 }
 
 void SamPredictor::setTorchImage(torch::Tensor& inputTensor) {
+
         if (!(inputTensor.sizes().size() == 4 && inputTensor.size(1) == 3)) {
                 throw std::runtime_error(
                     "setTorchImage input must be BCHW with long side");
