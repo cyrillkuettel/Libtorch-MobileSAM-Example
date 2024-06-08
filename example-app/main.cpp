@@ -8,13 +8,13 @@ static void mouseCallback(int event, int x, int y, int flags, void* userdata) {
         // Check if the left mouse button was clicked
         if (event == cv::EVENT_LBUTTONDOWN) {
 
-                std::cout << "LBUTTONDOWN" << std::endl;
-                // Cast userdata to the expected type (std::vector<std::pair<float, float>>*)
-                std::vector<std::pair<float, float>>* points = reinterpret_cast<std::vector<std::pair<float, float>>*>(userdata);
-                points->emplace_back(static_cast<float>(x), static_cast<float>(y));
-                std::cout << "Writing into memory points: " << points << std::endl;
-                // Optional: Print the coordinates for verification
-                std::cout << "Clicked at: " << x << ", " << y << std::endl;
+                std::cout << "LBUTTONDOWN\n";
+// Cast userdata to the expected type (std::vector<std::pair<int, int>>*)
+                auto* clickedPoints = static_cast<std::vector<std::pair<int, int>>*>(userdata);
+                clickedPoints->emplace_back(x, y);
+                std::cout << "Writing into memory points: " << clickedPoints << '\n';
+// Optional: Print the coordinates for verification
+                std::cout << "Clicked at: (" << x << ", " << y << ")\n";
                 mouseClicked = true;
         }
         // cv::destroyWindow("Select a point"); // Close the window
@@ -39,7 +39,7 @@ void validateAppConfig(const AppConfig& config) {
 }
 
 
-std::pair<torch::Tensor, torch::Tensor> computePointsAndLabels( AppConfig& config,  cv::Mat& jpg,  SamPredictor& predictor) {
+std::pair<torch::Tensor, torch::Tensor> computePointsAndLabels(const AppConfig& config, cv::Mat& jpg, SamPredictor& predictor) {
 
         std::vector<std::pair<float, float>> points;
         if (config.useYoloBoxes) {
@@ -94,9 +94,9 @@ std::pair<torch::Tensor, torch::Tensor> computePointsAndLabels( AppConfig& confi
 
         // Convert the transformed coordinates back to a flat vector
         std::vector<float> flatTransformedCoords;
-        for (const auto& coord : transformedCoords) {
-                flatTransformedCoords.push_back(coord.first);
-                flatTransformedCoords.push_back(coord.second);
+        for (const auto& [first, second] : transformedCoords) {
+                flatTransformedCoords.push_back(first);
+                flatTransformedCoords.push_back(second);
         }
         std::cout << "flatTransformedCoords" << std::endl;
         std::cout << flatTransformedCoords << std::endl;
@@ -212,18 +212,13 @@ int main() {
         validateAppConfig(config);
 
         std::string defaultImagePath = config.defaultImagePath;
-
         //	std::string defaultMobileSamPredictor =
         //		"/home/cyrill/pytorch/libtorch-opencv/example-app/models/mobilesam_predictor.pt";
         //	std::string defaultVitImageEmbedding =
         //		"/home/cyrill/pytorch/libtorch-opencv/example-app/models/vit_image_embedding.pt";
 
-        std::string defaultMobileSamPredictor =
-            "/Users/cyrill/Libtorch-MobileSAM-Example/example-app/models/"
-            "mobilesam_predictor.pt";
-        std::string defaultVitImageEmbedding =
-            "/Users/cyrill/Libtorch-MobileSAM-Example/example-app/models/"
-            "vit_image_embedding.pt";
+        std::string defaultMobileSamPredictor = "models/mobilesam_predictor.pt";
+        std::string defaultVitImageEmbedding = "models/vit_image_embedding.pt";
 
         SamPredictor predictor(1024, defaultMobileSamPredictor,
                                defaultVitImageEmbedding);
@@ -278,7 +273,9 @@ int main() {
 	 * run inference
 	 */
         auto start = std::chrono::high_resolution_clock::now();
-        torch::Tensor masks, IOUPredictions, lowResMasks;
+        torch::Tensor masks;
+        torch::Tensor IOUPredictions;
+        torch::Tensor lowResMasks;
         std::tie(masks, IOUPredictions, lowResMasks) = predictor.predict(
             pointCoordsTensor, pointLabelsTensor, maskInput, hasMaskInput);
         // Stop timing after the first function call
