@@ -3,17 +3,26 @@
 #include "visualize.cpp"
 #include "yolo.h"
 
-bool mouseClicked  = false;
+#include <iostream>
+#include <vector>
+#include <filesystem>
+
+namespace fs = std::filesystem;
+
+bool mouseClicked = false;
+
 static void mouseCallback(int event, int x, int y, int flags, void* userdata) {
         // Check if the left mouse button was clicked
         if (event == cv::EVENT_LBUTTONDOWN) {
 
                 std::cout << "LBUTTONDOWN\n";
-// Cast userdata to the expected type (std::vector<std::pair<int, int>>*)
-                auto* clickedPoints = static_cast<std::vector<std::pair<int, int>>*>(userdata);
+                // Cast userdata to the expected type (std::vector<std::pair<int, int>>*)
+                auto* clickedPoints =
+                    static_cast<std::vector<std::pair<int, int>>*>(userdata);
                 clickedPoints->emplace_back(x, y);
-                std::cout << "Writing into memory points: " << clickedPoints << '\n';
-// Optional: Print the coordinates for verification
+                std::cout << "Writing into memory points: " << clickedPoints
+                          << '\n';
+                // Optional: Print the coordinates for verification
                 std::cout << "Clicked at: (" << x << ", " << y << ")\n";
                 mouseClicked = true;
         }
@@ -28,18 +37,20 @@ struct AppConfig {
 };
 
 void validateAppConfig(const AppConfig& config) {
-    if (config.useYoloBoxes) {
-        if (!config.points.empty() || !config.pointLabels.empty()) {
-                std::cout << "AppConfig is invalid. Note that if  config.useYoloBoxes==true, "
-                             "the boxes will be calculated using the YOLOV5 object detection model.\n";
-                std::exit(EXIT_FAILURE);
+        if (config.useYoloBoxes) {
+                if (!config.points.empty() || !config.pointLabels.empty()) {
+                        std::cout << "AppConfig is invalid. Note that if  "
+                                     "config.useYoloBoxes==true, "
+                                     "the boxes will be calculated using the "
+                                     "YOLOV5 object detection model.\n";
+                        std::exit(EXIT_FAILURE);
+                }
         }
-    }
-    std::cout << "AppConfig ok.\n";
+        std::cout << "AppConfig ok.\n";
 }
 
-
-std::pair<torch::Tensor, torch::Tensor> computePointsAndLabels(const AppConfig& config, cv::Mat& jpg, SamPredictor& predictor) {
+std::pair<torch::Tensor, torch::Tensor> computePointsAndLabels(
+    const AppConfig& config, cv::Mat& jpg, SamPredictor& predictor) {
 
         std::vector<std::pair<float, float>> points;
         if (config.useYoloBoxes) {
@@ -47,7 +58,8 @@ std::pair<torch::Tensor, torch::Tensor> computePointsAndLabels(const AppConfig& 
                 runYolo(jpg, points);  // writes into the points
         } else {
 
-                std::cout << "Using config points=" << config.points << std::endl;
+                std::cout << "Using config points=" << config.points
+                          << std::endl;
                 points = config.points;
         }
 
@@ -119,7 +131,7 @@ const AppConfig exampleInputPackage = {
     {{228.0f, 102.0f}, {325.0f, 261.0f}},
     {2.0f, 3.0f},  // top left, bottom right
     //"/home/cyrill/pytorch/libtorch-opencv/example-app/images/img.jpg",
-    "/Users/cyrill/libtorch-mobileSAM-exapmle/Libtorch-MobileSAM-Example/example-app/images/img.jpg",
+    "images/img.jpg",
 };
 
 const AppConfig exampleInputPackage2 = {
@@ -130,31 +142,6 @@ const AppConfig exampleInputPackage2 = {
     "/home/cyrill/pytorch/libtorch-opencv/example-app/images/picture2.jpg",
 };
 
-const AppConfig issue1Input = {
-    {
-        {460.0f, 200.0f},
-        {790.0f, 592.0f},
-    },
-    {2.0f, 3.0f},  // top left, bottom right
-    "/Users/cyrill/Desktop/dog.png",
-};
-
-const AppConfig iosTest = {
-    {
-        {460.0f, 200.0f},
-        {790.0f, 592.0f},
-    },
-    {2.0f, 3.0f},  // top left, bottom right
-    "/Users/cyrill/Downloads/test.jpg",
-};
-
-const AppConfig iosTestY = {
-    {
-    },
-    {},  // top left, bottom right
-    "/Users/cyrill/Downloads/test.jpg",
-        true,
-};
 
 const AppConfig wald = {
     {
@@ -165,7 +152,7 @@ const AppConfig wald = {
 };
 
 const AppConfig mateY = {
-    { },
+    {},
     {},  // top left, bottom right
     "/Users/cyrill/Documents/Test_images/mate.jpg",
     true,
@@ -181,48 +168,53 @@ const AppConfig waldY = {
 const AppConfig exampleInputPackageY = {
     {},
     {},  // top left, bottom right
-    "/Users/cyrill/libtorch-mobileSAM-exapmle/Libtorch-MobileSAM-Example/example-app/images/img.jpg",
+    "images/img.jpg",
     true,
 };
-
 const AppConfig elephantsY = {
+
     {},
     {},  // top left, bottom right
-    "/Users/cyrill/libtorch-mobileSAM-exapmle/Libtorch-MobileSAM-Example/example-app/images/elephants.jpg",
+    "images/elephants.jpg",
     true,
 };
 
 const AppConfig test = {
     {},
     {},  // top left, bottom right
-    "/Users/cyrill/libtorch-mobileSAM-exapmle/Libtorch-MobileSAM-Example/example-app/images/picture2.jpg",
+    "images/picture2.jpg",
     false,
 };
 
-const AppConfig test2= {
-  {{420.0f, 600.0f}},
+const AppConfig test2 = {
+    {{420.0f, 600.0f}},
     {1.0f},  // top left, bottom right
     "/Users/cyrill/Desktop/nuessli2.jpeg",
     false,
 };
 
-
 int main() {
-        // Set input here
         const AppConfig config = elephantsY;
         validateAppConfig(config);
 
-        std::string defaultImagePath = config.defaultImagePath;
-        std::string defaultMobileSamPredictor = "/Users/cyrill/libtorch-mobileSAM-exapmle/Libtorch-MobileSAM-Example/example-app/models/mobilesam_predictor.pt";
-        std::string defaultVitImageEmbedding = "/Users/cyrill/libtorch-mobileSAM-exapmle/Libtorch-MobileSAM-Example/example-app/models/vit_image_embedding.pt";
+        // Get the current working directory
+        fs::path currentPath = fs::current_path();
 
+        // Construct the relative paths based on the current directory
+        fs::path defaultImagePath =
+            currentPath / "images" /
+            fs::path(config.defaultImagePath).filename();
+        fs::path defaultMobileSamPredictor =
+            currentPath /  "models" / "mobilesam_predictor.pt";
+        fs::path defaultVitImageEmbedding =
+            currentPath / "models" / "vit_image_embedding.pt";
 
-        SamPredictor predictor(1024, defaultMobileSamPredictor,
-                               defaultVitImageEmbedding);
+        SamPredictor predictor(1024, defaultMobileSamPredictor.string(),
+                               defaultVitImageEmbedding.string());
         torch::Tensor maskInput =
             torch::zeros({1, 1, 256, 256}, torch::dtype(torch::kFloat32));
 
-        cv::Mat jpg = cv::imread(defaultImagePath, cv::IMREAD_COLOR);
+        cv::Mat jpg = cv::imread(defaultImagePath.string(), cv::IMREAD_COLOR);
         if (jpg.channels() != 3) {
                 std::cerr << "Input is not a 3-channel image" << std::endl;
                 return 1;
@@ -230,52 +222,46 @@ int main() {
         predictor.setImage(jpg);
 
         auto clonedConfig = config;  // Clone the config struct
-         // if we don't use yolo boxes, the user can interactively select the points
         std::vector<std::pair<float, float>> points;
         if (!config.useYoloBoxes) {
                 cv::namedWindow("Select a point", cv::WINDOW_AUTOSIZE);
 
                 std::cout << "setting mouseCallback" << std::endl;
-                // Display the image and wait for a mouse click
                 cv::imshow("Select a point", jpg);
                 cv::setMouseCallback("Select a point", mouseCallback, &points);
 
-                // Not very elegant, but right now the only way to wait for a mouse click
-                // Seems that waitKey is required even if we use only a mouseCallback
                 while (true) {
                         if (cv::waitKey(1) > 0 || mouseClicked) {
                                 break;
                         }
                 }
 
-                // DEbug: Check if the callback was invoked
                 if (mouseClicked) {
-                    std::cout << "mouseCallback was invoked." << std::endl;
+                        std::cout << "mouseCallback was invoked." << std::endl;
                 } else {
-                    std::cout << "!!!! mouseCallback was not invoked." << std::endl;
-                    std::exit(EXIT_FAILURE);
+                        std::cout << "!!!! mouseCallback was not invoked."
+                                  << std::endl;
+                        std::exit(EXIT_FAILURE);
                 }
 
                 assert(!points.empty());
                 clonedConfig.points = points;
         }
 
-        auto [pointCoordsTensor, pointLabelsTensor] = computePointsAndLabels(clonedConfig, jpg, predictor);
+        auto [pointCoordsTensor, pointLabelsTensor] =
+            computePointsAndLabels(clonedConfig, jpg, predictor);
         pointCoordsTensor =
             pointCoordsTensor.reshape({1, 5, 2}).to(torch::kFloat32);
         pointLabelsTensor =
             pointLabelsTensor.reshape({1, 5}).to(torch::kFloat32);
         bool hasMaskInput = false;
-        /***
-	 * run inference
-	 */
+
         auto start = std::chrono::high_resolution_clock::now();
         torch::Tensor masks;
         torch::Tensor IOUPredictions;
         torch::Tensor lowResMasks;
         std::tie(masks, IOUPredictions, lowResMasks) = predictor.predict(
             pointCoordsTensor, pointLabelsTensor, maskInput, hasMaskInput);
-        // Stop timing after the first function call
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);

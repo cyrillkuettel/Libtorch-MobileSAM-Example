@@ -91,7 +91,7 @@ void runYolo(cv::Mat& inputImage, std::vector<std::pair<float, float>>&  points)
 
         // get boxes from yolo .
         torch::jit::script::Module _impl = torch::jit::load(
-            "/Users/cyrill/libtorch-mobileSAM-exapmle/Libtorch-MobileSAM-Example/example-app/models/"
+            "models/"
             "yolov5s.torchscript.ptl");
 
         float mean[3] = {0.0, 0.0, 0.0};  // Yolov5s mobile scripted mean
