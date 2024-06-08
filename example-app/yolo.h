@@ -21,6 +21,6 @@ void getBestBoxes(float *outputTensorFloatArray, int32_t inputWidth, int32_t inp
                   int32_t imageWidth, int32_t imageHeight,  int outputRows, int outputColumns,
                   std::vector<std::pair<float, float>>& points);
 
-void runYolo(cv::Mat& inputImage, std::vector<std::pair<float, float>>& points, const fs::path& parentPath);
+void runYolo(cv::Mat& inputImage, std::vector<std::pair<float, float>>& points, const fs::path& yoloModelPath);
 
 #endif //YOLO_H
