@@ -50,12 +50,12 @@ void validateAppConfig(const AppConfig& config) {
 }
 
 std::pair<torch::Tensor, torch::Tensor> computePointsAndLabels(
-    const AppConfig& config, cv::Mat& jpg, SamPredictor& predictor) {
+    const AppConfig& config, cv::Mat& jpg, SamPredictor& predictor, const fs::path& yoloModelPath) {
 
         std::vector<std::pair<float, float>> points;
         if (config.useYoloBoxes) {
                 std::cout << "Using Yolo Boxes" << std::endl;
-                runYolo(jpg, points);  // writes into the points
+                runYolo(jpg, points, yoloModelPath);  // writes into the points
         } else {
 
                 std::cout << "Using config points=" << config.points
@@ -198,16 +198,25 @@ int main() {
         validateAppConfig(config);
 
         // Get the current working directory
-        fs::path currentPath = fs::current_path();
+        fs::path exampleApp = fs::current_path().parent_path();
+        std::cout << "Current path: " << exampleApp << std::endl;
+
+        assert(fs::exists(exampleApp));
+        assert(fs::exists(exampleApp / "images") &&
+               "The images directory does not exist");
 
         // Construct the relative paths based on the current directory
         fs::path defaultImagePath =
-            currentPath / "images" /
+            exampleApp / "images" /
             fs::path(config.defaultImagePath).filename();
         fs::path defaultMobileSamPredictor =
-            currentPath /  "models" / "mobilesam_predictor.pt";
+            exampleApp /  "models" / "mobilesam_predictor.pt";
         fs::path defaultVitImageEmbedding =
-            currentPath / "models" / "vit_image_embedding.pt";
+            exampleApp / "models" / "vit_image_embedding.pt";
+
+
+        // Construct the relative path to the YOLOv5s model file
+        fs::path yoloModelPath = exampleApp / "models" / "yolov5s.torchscript.ptl";
 
         SamPredictor predictor(1024, defaultMobileSamPredictor.string(),
                                defaultVitImageEmbedding.string());
@@ -251,7 +260,7 @@ int main() {
         }
 
         auto [pointCoordsTensor, pointLabelsTensor] =
-            computePointsAndLabels(clonedConfig, jpg, predictor);
+            computePointsAndLabels(clonedConfig, jpg, predictor, yoloModelPath);
         pointCoordsTensor =
             pointCoordsTensor.reshape({1, 5, 2}).to(torch::kFloat32);
         pointLabelsTensor =

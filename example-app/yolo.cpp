@@ -94,18 +94,19 @@ void getBestBoxes(float *outputTensorFloatArray, int32_t inputWidth, int32_t inp
         assert(points.size() == 4 || points.size() == 2);
 }
 
-void runYolo(cv::Mat& inputImage, std::vector<std::pair<float, float>>&  points) {
+void runYolo(cv::Mat& inputImage, std::vector<std::pair<float, float>>& points, const fs::path& yoloModelPath) {
+
+        // todo: order correct?
         int32_t originalImageWidth = inputImage.rows;
         int32_t originalImageHeight = inputImage.cols;
 
-        // get boxes from yolo .
-        torch::jit::script::Module _impl = torch::jit::load(
-            "models/"
-            "yolov5s.torchscript.ptl");
+        // torch::jit::script::Module _impl = torch::jit::load("models/yolov5s.torchscript.ptl");
 
-        float mean[3] = {0.0, 0.0, 0.0};  // Yolov5s mobile scripted mean
-        float std[3] = {1.0, 1.0,
-                        1.0};  // Yolov5s mobile scripted standard deviation
+        // get boxes from yolo .
+        torch::jit::script::Module _impl = torch::jit::load(yoloModelPath.string());
+
+        float mean[3] = {0.0, 0.0, 0.0};  // Yolov5s: mean
+        float std[3] = {1.0, 1.0, 1.0};   // Yolov5s: standard deviation
         int32_t yoloInputWidth = 640;
         int32_t yoloInputHeight = 640;
 

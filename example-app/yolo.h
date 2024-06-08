@@ -10,6 +10,9 @@
 #include <opencv2/imgproc.hpp>  // For image processing functions like cv::resize
                // For std::string
 #include <vector>
+#include <iostream>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 // Function declarations
 float* resizeAndNormalizeImage(cv::Mat& inputImage, int w, int h);
@@ -18,6 +21,6 @@ void getBestBoxes(float *outputTensorFloatArray, int32_t inputWidth, int32_t inp
                   int32_t imageWidth, int32_t imageHeight,  int outputRows, int outputColumns,
                   std::vector<std::pair<float, float>>& points);
 
-void runYolo(cv::Mat& inputImage, std::vector<std::pair<float, float>>&  points);
+void runYolo(cv::Mat& inputImage, std::vector<std::pair<float, float>>& points, const fs::path& parentPath);
 
 #endif //YOLO_H
