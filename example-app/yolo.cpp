@@ -99,7 +99,7 @@ void runYolo(cv::Mat& inputImage, std::vector<std::pair<float, float>>&  points)
         int32_t originalImageHeight = inputImage.cols;
 
         // get boxes from yolo .
-        static auto torch::jit::script::Module _impl = torch::jit::load(
+        torch::jit::script::Module _impl = torch::jit::load(
             "models/"
             "yolov5s.torchscript.ptl");
 
