@@ -5,13 +5,7 @@
 #include <stdexcept>
 #include <string>
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgcodecs/imgcodecs.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/opencv.hpp>
-
-#include <torch/script.h>
+#include "visualize.hpp"
 
 void printMatType(const cv::Mat& mat) {
         int type = mat.type();
@@ -100,8 +94,7 @@ void showMask(const torch::Tensor& mask, cv::Mat& image) {
 }
 
 // todo: write function to show box and points that is not buggy
-void showPoints(const torch::Tensor& coords, cv::Mat& image,
-                int markerSize = 6) {
+void showPoints(const torch::Tensor& coords, cv::Mat& image, int markerSize) {
         if (coords.sizes().size() != 3 || coords.size(1) != 5 ||
             coords.size(2) != 2) {
                 throw std::runtime_error(

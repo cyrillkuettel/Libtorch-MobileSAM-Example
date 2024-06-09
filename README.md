@@ -99,22 +99,34 @@ Note: Tested with Libtorch 1.13.0+ and OpenCV 4.5.4+
 ### Libtorch dependency
 The project expects `libtorch/` in the top-level directory. I have not included this because its 727MB. 
 
-#### Mac M1 Chips
-
-Pre-built binaries of pytorch for for Mac M2 can be found here [libtorch-mac-m1/releases](https://github.com/mlverse/libtorch-mac-m1/releases) (no official builds at the point of writing this.) 
-Rename the folder to 'libtorch' and put it in the top-level directory of the repository.
 #### Linux
 
-Just download [this version from pytorch.org](https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.13.0%2Bcpu.zip), rename the folder to 'libtorch' and put it in the repository at top level.
+Download [this version from pytorch.org](https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.13.0%2Bcpu.zip), rename the folder to 'libtorch' and put it in the repository at top level.
 
 ```bash
+git clone https://github.com/cyrillkuettel/Libtorch-MobileSAM-Example.git
+cd Libtorch-MobileSAM-Example
 wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.13.0%2Bcpu.zip
 unzip libtorch-cxx11-abi-shared-with-deps-1.13.0+cpu.zip # important that it's the  `cxx11 ABI` version, works with OpenCV)
 ```
 
+#### Mac M1 Chips
+
+Pre-built binaries of pytorch for for Mac M2 can be found here [libtorch-mac-m1/releases](https://github.com/mlverse/libtorch-mac-m1/releases) (no official builds at the point of writing this.)
+Rename the folder to 'libtorch' and put it in the top-level directory of the repository.
+
+It should look like this:
+
+```
+.
+├── README.md
+├── example-app
+└── libtorch
+```
+
 ### OpenCV dependency
 Install OpenCV for your operating system. 
-#### Unix/MacOS
+#### Unix
 I did it like this: 
 
 ```bash
@@ -143,22 +155,25 @@ sudo make install
 ## Run
 ### Run from command line
 
-Only first time: (Note the two dots at the end)
 ```bash
 cd example-app
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=/absolute/path/to/libtorch ..
-cmake --build . --config Debug
-```
-
-From now on, you can just type:
-
-```
+./configure.sh
 make
+cd build && ./example_main
 ```
 
-### Run from Clion 
+### Run the tests
+
+```bash
+cd example-app
+./configure.sh
+make
+cd build && ./UnitTests
+```
+
+
+
+### Run in Clion 
 
 1. File -> Open -> example-app
 2. Open build settings (should open automatically): File -> Settings -> Build, Execution, Deployment -> CMake 

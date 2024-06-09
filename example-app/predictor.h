@@ -8,18 +8,6 @@
 #ifndef SAM_PREDICTOR_H
 #define SAM_PREDICTOR_H
 
-//#include <memory>
-//#include <vector>
-//#include <stdexcept>
-//#include <string>
-//#include <sstream>
-//#include <cstdlib>
-
-// #include <opencv2/core/core.hpp>
-// #include <opencv2/highgui/highgui.hpp>
-// #include <opencv2/imgcodecs/imgcodecs.hpp>
-// #include <opencv2/imgproc/imgproc.hpp>
-// #include <opencv2/opencv.hpp>
 
 #include <torch/script.h>
 #include <torch/torch.h>
