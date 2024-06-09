@@ -4,6 +4,18 @@
 namespace fs = std::filesystem;
 
 
+void validateAppConfig(const AppConfig& config) {
+        if (config.useYoloBoxes) {
+                if (!config.points.empty() || !config.pointLabels.empty()) {
+                        std::cout << "AppConfig is invalid. Note that if  "
+                                     "config.useYoloBoxes==true, "
+                                     "the boxes will be calculated using the "
+                                     "YOLOV5 object detection model.\n";
+                        std::exit(EXIT_FAILURE);
+                }
+        }
+        std::cout << "AppConfig ok.\n";
+}
 
 std::pair<torch::Tensor, torch::Tensor> computePointsAndLabels(
     const AppConfig& config, cv::Mat& jpg, SamPredictor& predictor, const fs::path& yoloModelPath) {

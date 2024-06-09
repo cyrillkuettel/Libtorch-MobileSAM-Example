@@ -37,6 +37,7 @@ std::vector<std::pair<float, float>> ResizeLongestSide::applyCoords(
         /**
          * Transforms coordinates based on the resizing of an image.
          *
+         * How it works:
          * The function takes a vector of coordinates (each as a pair of floats) and the original
          * dimensions of the image (as a pair of ints). Each coordinate is scaled according to
          * the transformation applied to the image when resizing its longest side to the target length.

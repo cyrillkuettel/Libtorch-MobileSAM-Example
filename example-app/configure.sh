@@ -28,7 +28,7 @@ mkdir -p $BUILD_DIR
 
 # Check if the build directory is not empty
 if [ "$(ls -A $BUILD_DIR)" ]; then
-    echo "The build directory is not empty. Do you want to delete its contents and start again? (y/n)"
+    echo "The build directory is not empty. Do you want to delete its contents? (y/n)"
     read answer
     if [ "$answer" != "${answer#[Yy]}" ] ;then
         echo "Deleting contents of the build directory..."
@@ -40,5 +40,7 @@ if [ "$(ls -A $BUILD_DIR)" ]; then
 fi
 
 cd $BUILD_DIR
+
+echo "Running cmake -DCMAKE_BUILD_TYPE=Debug  "
 # Use the discovered LIBTORCH_PATH (the absolute path to libtorch) in the cmake command
 cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH="$LIBTORCH_PATH" ..

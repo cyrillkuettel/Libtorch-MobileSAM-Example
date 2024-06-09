@@ -3,9 +3,12 @@ cmake_minimum_required (VERSION 3.10)
 # Set project name
 project(example-app)
 
-# For mac m2?
-# set(CMAKE_SYSTEM_PROCESSOR arm64)
-# set(CMAKE_OSX_ARCHITECTURES arm64)
+# XXX These are needed on mac m2. Otherwise they should be removed (!)
+# if these flags are not set, the build returns this error: "found architecture 'arm64', required architecture 'x86_6"
+#    Fixme: why Cmake can't detect this automatically?
+set(CMAKE_SYSTEM_PROCESSOR arm64)
+set(CMAKE_OSX_ARCHITECTURES arm64)
+
 
 # Build a test or utility executable
 function(build_executable project_name source_list is_linked is_startup requires_pthreads)
@@ -88,9 +91,9 @@ set(
         #add more:
         "tests/UnitTest.cpp"
         "tests/UnitTest.h"
-        "tests/MyUnitTestCode.cpp"
+        "tests/PredictorTest.cpp"
 )
 
 build_executable(UnitTests "${unittests_source_list}" TRUE TRUE FALSE)
 target_include_directories(UnitTests PRIVATE ${TORCH_INCLUDE_DIRS})
-target_link_libraries(UnitTests ${TORCH_LIBRARIES} ${OpenCV_LIBS})
+target_link_libraries(UnitTests ${PROJECT_NAME} ${TORCH_LIBRARIES} ${OpenCV_LIBS})

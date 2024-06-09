@@ -21,6 +21,8 @@ struct AppConfig {
         bool useYoloBoxes;
 };
 
+void validateAppConfig(const AppConfig& config);
+
 std::pair<torch::Tensor, torch::Tensor> computePointsAndLabels(
     const AppConfig& config, cv::Mat& jpg, SamPredictor& predictor, const fs::path& yoloModelPath);
 

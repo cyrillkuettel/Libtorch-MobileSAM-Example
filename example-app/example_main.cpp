@@ -18,7 +18,7 @@ const AppConfig exampleInputPackage2 = {
         {384.0f, 229.0f},
     },
     {1.0f},
-    "/home/cyrill/pytorch/libtorch-opencv/example-app/images/picture2.jpg",
+    "images/picture2.jpg",
 };
 
 const AppConfig wald = {
@@ -71,18 +71,7 @@ const AppConfig test2 = {
     false,
 };
 
-void validateAppConfig(const AppConfig& config) {
-        if (config.useYoloBoxes) {
-                if (!config.points.empty() || !config.pointLabels.empty()) {
-                        std::cout << "AppConfig is invalid. Note that if  "
-                                     "config.useYoloBoxes==true, "
-                                     "the boxes will be calculated using the "
-                                     "YOLOV5 object detection model.\n";
-                        std::exit(EXIT_FAILURE);
-                }
-        }
-        std::cout << "AppConfig ok.\n";
-}
+
 
 int main() {
         const AppConfig config = {
