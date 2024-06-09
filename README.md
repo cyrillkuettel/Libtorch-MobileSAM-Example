@@ -159,7 +159,7 @@ sudo make install
 cd example-app
 ./configure.sh
 make
-cd build && ./example_main
+build/example_main  # run the main example demo
 ```
 
 ### Run the tests
@@ -167,8 +167,8 @@ cd build && ./example_main
 ```bash
 cd example-app
 ./configure.sh
-make
-cd build && ./UnitTests
+make tests
+build/UnitTests
 ```
 
 
