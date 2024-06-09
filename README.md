@@ -1,31 +1,30 @@
 # Libtorch MobileSAM 
 
+https://github.com/cyrillkuettel/Libtorch-MobileSAM-Example/assets/36520284/73cbf5ce-e58a-45d5-ba36-9a78307ecb6a
 
 A C++ implementation of [MobileSAM](https://github.com/ChaoningZhang/MobileSAM).
 
+# What does this do?
+Ported the [original python implementation](https://github.com/ChaoningZhang/MobileSAM/blob/master/mobile_sam/predictor.py) to C++.
+
+This can runt the Segment-Anything model based on the TorchScript `model.pt` file (included).
+
+# Why is it useful?
+
+The MobileSAM project aims to "make SAM lightweight for mobile applications and beyond," yet it only offers Python code, which isn't ideal for running on mobile devices.
+
+This project allows to actually run the model on mobile devices. 
+It can be integrated into Flutter, native Android, or iOS apps, as these platforms support running C++ code.
 
 
-https://github.com/cyrillkuettel/Libtorch-MobileSAM-Example/assets/36520284/73cbf5ce-e58a-45d5-ba36-9a78307ecb6a
+# Limitations
+Cannot automatically segment images, you need to provide the input points and boxes. 
+This could be implemented in the future.
 
+# How do I get started?
+You need to build OpenCV (instructions below) and download libtorch.
 
-
-## Description
-
-The main goal of `Libtorch-MobileSAM-Example` is to run traced or scripted TorchScript models. This provides the foundation for eventually running this on mobile devices (Pytorch Mobile).
-This is useful if you want to port a model to mobile: You can iterate much faster: The build-and-run loop is 3 seconds, and not 2 minutes like on your typical Android/iOS build system.
-
-## Todo
-
-- [x] Feature: Refactor to be object oriented
-- [x] Bug: Translate input coordinates to longest side for (1024x1024)
-- [x] Feature: Add ability to click with mouse 
-- [ ] Bug: Fix the `drawPoints` function. 
-- [ ] Feature: Implement [automatic_mask_generator](https://github.com/ChaoningZhang/MobileSAM/blob/master/mobile_sam/automatic_mask_generator.py)
-
-
-
-## Quick Start
-### Models
+## Models
 
 The models are included in the repo, alternatively, you can export them with this script [convert_pytorch_mobile.py](https://github.com/cmarschner/MobileSAM/blob/cmarschner/convert/scripts/convert_pytorch_mobile.py).
 
@@ -180,3 +179,13 @@ build/UnitTests
 3. Delete contents of Cmake options, add this: `-DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=/absolute/path/to/libtorch`
 
 ![Clion_setup.png](example-app%2FClion_setup.png)
+
+
+## Todo
+
+- [x] Feature: Refactor to be object oriented
+- [x] Bug: Translate input coordinates to longest side for (1024x1024)
+- [x] Feature: Add ability to click with mouse
+- [ ] Bug: Fix the `drawPoints` function.
+- [ ] Feature: Implement [automatic_mask_generator](https://github.com/ChaoningZhang/MobileSAM/blob/master/mobile_sam/automatic_mask_generator.py)
+
