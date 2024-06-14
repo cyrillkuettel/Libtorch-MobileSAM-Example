@@ -151,7 +151,6 @@ sudo make install
 
 
 ## Run
-### Run from command line
 
 ```bash
 cd example-app
@@ -160,7 +159,7 @@ make
 build/example_main  # run the main example demo
 ```
 
-### Run the tests
+## Run the tests
 
 ```bash
 cd example-app
@@ -169,6 +168,7 @@ make tests
 build/UnitTests
 ```
 
+The `./configure` only needs to be called the first time.
 
 
 ### Run in Clion 
