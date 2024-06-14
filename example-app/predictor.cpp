@@ -11,7 +11,7 @@ void SamPredictor::setImage(const cv::Mat& image) {
         }
 
         cv::Mat img;
-        cv::cvtColor(image.clone(), img, cv::COLOR_BGR2RGB);
+        cvtColor(image.clone(), img, cv::COLOR_BGR2RGB);
 
         originalImageHeight = img.rows;
         originalImageWidth = img.cols;
@@ -26,11 +26,11 @@ void SamPredictor::setImage(const cv::Mat& image) {
             {CV_16S, "CV_16S"}, {CV_32S, "CV_32S"}, {CV_32F, "CV_32F"},
             {CV_64F, "CV_64F"}};
 
-        int depth = img.depth();
+        const int depth = img.depth();
         std::string depthStr =
             depthMap.count(depth) ? depthMap[depth] : "Unknown";
 
-        auto inputTensor =
+        at::Tensor inputTensor =
             torch::from_blob(img.data, {img.rows, img.cols, 3}, torch::kByte);
 
         inputTensor = inputTensor.permute({2, 0, 1}).contiguous();

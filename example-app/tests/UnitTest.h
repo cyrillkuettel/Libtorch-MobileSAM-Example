@@ -7,4 +7,7 @@
 
 
 SamPredictor setupPredictor();
+
+std::vector<unsigned char> readFileToBuffer(const fs::path& filePath);
+
 #endif // UNIT_TESTS_H____

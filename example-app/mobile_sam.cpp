@@ -17,6 +17,8 @@ void validateAppConfig(const AppConfig& config) {
         std::cout << "AppConfig ok.\n";
 }
 
+
+// todo: break up into 2 functions, so that we can use the points before transformation is applied, this can be used for showing the points on the original image.
 std::pair<torch::Tensor, torch::Tensor> computePointsAndLabels(
     const AppConfig& config, cv::Mat& jpg, SamPredictor& predictor, const fs::path& yoloModelPath) {
 

@@ -22,3 +22,21 @@ SamPredictor setupPredictor() {
         return predictor;
 }
 
+// Function to read a binary file into a vector of unsigned char
+// Function to read a binary file into a vector of unsigned char
+std::vector<unsigned char> readFileToBuffer(const fs::path& filePath) {
+    std::ifstream file(filePath, std::ios::binary | std::ios::ate);
+    if (!file.is_open()) {
+        throw std::runtime_error("Failed to open the file");
+    }
+
+    std::streamsize fileSize = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    std::vector<unsigned char> buffer(fileSize);
+    if (!file.read(reinterpret_cast<char*>(buffer.data()), fileSize)) {
+        throw std::runtime_error("Failed to read the file");
+    }
+
+    return buffer;
+}

@@ -1,4 +1,3 @@
-//
 // Created by cyrill on 09.06.2024.
 //
 
@@ -75,9 +74,10 @@ const AppConfig test2 = {
 
 int main() {
         const AppConfig config = {
-            {{228.0f, 102.0f}, {325.0f, 261.0f}},
-            {2.0f, 3.0f},  // top left, bottom right
-            "images/img.jpg",
+            {{130.0f,80.0f}},
+            {1.0f},  // top left, bottom right
+            "images/elephants.jpg",
+            false,
         };
 
         validateAppConfig(config);
