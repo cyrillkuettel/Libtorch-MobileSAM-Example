@@ -5,13 +5,11 @@ https://github.com/cyrillkuettel/Libtorch-MobileSAM-Example/assets/36520284/73cb
 A C++ implementation of [MobileSAM](https://github.com/ChaoningZhang/MobileSAM).
 
 # What does this do?
-Ported the [original python implementation](https://github.com/ChaoningZhang/MobileSAM/blob/master/mobile_sam/predictor.py) to C++.
-
-This can runt the Segment-Anything model based on the TorchScript `model.pt` file (included).
+This can run Segment-Anything model without python. It is based on the TorchScript `model.pt` files (included).
 
 # Why is it useful?
 
-The MobileSAM project aims to "make SAM lightweight for mobile applications and beyond," yet it only offers Python code, which isn't ideal for running on mobile devices.
+[MobileSAM](https://github.com/ChaoningZhang/MobileSAM) project aims to "make SAM lightweight for mobile applications and beyond," yet it only offers Python code, which isn't ideal for running on mobile devices.
 
 This project allows to actually run the model on mobile devices. 
 It can be integrated into Flutter, native Android, or iOS apps, as these platforms support running C++ code.
@@ -26,9 +24,10 @@ You need to build OpenCV (instructions below) and download libtorch.
 
 ## Models
 
-The models are included in the repo, alternatively, you can export them with this script [convert_pytorch_mobile.py](https://github.com/cmarschner/MobileSAM/blob/cmarschner/convert/scripts/convert_pytorch_mobile.py).
+The models are included in the repo.
+If you really want you can export them with this script [convert_pytorch_mobile.py](https://github.com/cmarschner/MobileSAM/blob/cmarschner/convert/scripts/convert_pytorch_mobile.py).
 
-<details open>
+<details>
     <summary>Models</summary>
     <ul>
         <li>
@@ -93,7 +92,7 @@ brew install cmake pkg-config jpeg libpng libtiff openexr eigen tbb
 ```
 Note: Tested with Libtorch 1.13.0+ and OpenCV 4.5.4+
 
-(Other versions _might_ work, but have not been tested untested)
+(Other versions _might_ work, but have not been tested)
 
 ### Libtorch dependency
 The project expects `libtorch/` in the top-level directory. I have not included this because its 727MB. 
