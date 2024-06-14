@@ -116,14 +116,32 @@ void showPoints(const torch::Tensor& coords, cv::Mat& image, int markerSize) {
 void visualizeResults(cv::Mat& image, const torch::Tensor& masks,
                       const torch::Tensor& scores,
                       const torch::Tensor& pointCoords) {
-        // Loop through each mask
+
+
+        std::vector<cv::Mat> outImages = createInMemoryImages(
+            image, masks, scores, pointCoords);
+        return saveAndDisplayImages(outImages, scores);
+
+}
+
+std::vector<cv::Mat> createInMemoryImages(cv::Mat& image,
+                                          const torch::Tensor& masks,
+                                          const torch::Tensor& scores,
+                                          const torch::Tensor& pointCoords) {
+        std::vector<cv::Mat> outImages;
         showPoints(pointCoords, image, 5);
         for (int i = 0; i < masks.size(0); i++) {
-
                 cv::Mat displayImage = image.clone();
                 showMask(masks[i], displayImage);
-                // Show box if needed
+                outImages.push_back(displayImage);
+        }
+        return outImages;
+}
 
+void saveAndDisplayImages(const std::vector<cv::Mat>& inMemoryImages,
+                          const torch::Tensor& scores) {
+        for (size_t i = 0; i < inMemoryImages.size(); i++) {
+                // Generate filename with timestamp
                 auto now = std::chrono::system_clock::now();
                 auto now_c = std::chrono::system_clock::to_time_t(now);
                 auto milliseconds =
@@ -132,89 +150,29 @@ void visualizeResults(cv::Mat& image, const torch::Tensor& masks,
                     1000;
 
                 std::tm tm = *std::localtime(&now_c);
-
                 std::ostringstream oss;
                 oss << std::put_time(&tm, "%Y%m%d_%H%M%S") << '_'
                     << std::setfill('0') << std::setw(3)
                     << milliseconds.count();
-
                 std::string timestamp = oss.str();
                 std::string filename = "MobileSAM" + std::to_string(i + 1) +
                                        "_" + timestamp + ".png";
 
                 // Save output to png
-                std::vector<int> compressionParams;
-                compressionParams.push_back(cv::IMWRITE_PNG_COMPRESSION);
-                compressionParams.push_back(0);
-                cv::imwrite(filename, displayImage, compressionParams);
-
-                char actualpath[PATH_MAX + 1];
-                char* ptr;
-                ptr = realpath(filename.c_str(), actualpath);
-
-                if (ptr) {
-                        std::cout << "Saved output image:" << ptr << std::endl;
-                } else {
-                        std::cout << "Saved output image: " << filename
-                                  << std::endl;
-                }
-
-                cv::imshow(
-                    "Visualization - Mask " + std::to_string(i + 1) +
-                        ", Score: " + std::to_string(scores[i].item<float>()),
-                    displayImage);
-
-                cv::waitKey(0);  // Wait for a key press
-        }
-}
-
-std::vector<cv::Mat> createInMemoryImages(
-    cv::Mat& image, const torch::Tensor& masks, const torch::Tensor& scores,
-    const torch::Tensor& pointCoords) {
-    std::vector<cv::Mat> outImages;
-    showPoints(pointCoords, image, 5);
-    for (int i = 0; i < masks.size(0); i++) {
-        cv::Mat displayImage = image.clone();
-        showMask(masks[i], displayImage);
-
-        // Directly add the displayImage to the outImages vector
-        outImages.push_back(displayImage);
-
-        std::cout << "Image " << i + 1 << " added to outImages."
-                  << std::endl;
-    }
-    return outImages;
-}
-
-
-
-void saveAndDisplayImages(const std::vector<std::vector<unsigned char>>& inMemoryImages, const torch::Tensor& scores) {
-        for (size_t i = 0; i < inMemoryImages.size(); i++) {
-                // Decode image from memory buffer
-                cv::Mat image = cv::imdecode(inMemoryImages[i], cv::IMREAD_COLOR);
-
-                // Generate filename with timestamp
-                auto now = std::chrono::system_clock::now();
-                auto now_c = std::chrono::system_clock::to_time_t(now);
-                auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-
-                std::tm tm = *std::localtime(&now_c);
-                std::ostringstream oss;
-                oss << std::put_time(&tm, "%Y%m%d_%H%M%S") << '_'
-                    << std::setfill('0') << std::setw(3) << milliseconds.count();
-                std::string timestamp = oss.str();
-                std::string filename = "MobileSAM" + std::to_string(i + 1) + "_" + timestamp + ".png";
-
-                // Save output to png
-                std::vector<int> compressionParams = {cv::IMWRITE_PNG_COMPRESSION, 0};
-                cv::imwrite(filename, image, compressionParams);
+                std::vector<int> compressionParams = {
+                    cv::IMWRITE_PNG_COMPRESSION, 0};
+                cv::imwrite(filename, inMemoryImages[i], compressionParams);
 
                 // Print saved image path
-                std::filesystem::path actualpath = std::filesystem::absolute(filename);
+                std::filesystem::path actualpath =
+                    std::filesystem::absolute(filename);
                 std::cout << "Saved output image: " << actualpath << std::endl;
 
                 // Display image
-                cv::imshow("Visualization - Mask " + std::to_string(i + 1) + ", Score: " + std::to_string(scores[i].item<float>()), image);
+                cv::imshow(
+                    "Visualization - Mask " + std::to_string(i + 1) +
+                        ", Score: " + std::to_string(scores[i].item<float>()),
+                    inMemoryImages[i]);
                 cv::waitKey(0);  // Wait for a key press
         }
 }

@@ -32,8 +32,7 @@ std::vector<cv::Mat> createInMemoryImages(cv::Mat& image,
                                           const torch::Tensor& scores,
                                           const torch::Tensor& pointCoords);
 
-void saveAndDisplayImages(
-    const std::vector<std::vector<unsigned char>>& inMemoryImages,
-    const torch::Tensor& scores);
+void saveAndDisplayImages(const std::vector<cv::Mat>& inMemoryImages,
+                          const torch::Tensor& scores);
 
 #endif  // VISUALIZE_H

@@ -132,6 +132,7 @@ int main() {
         std::cout << "predictor.predict duration: " << duration.count()
                   << "ms\n";
 
+
         visualizeResults(jpg, masks, IOUPredictions, pointCoordsTensor);
 
         return 0;
